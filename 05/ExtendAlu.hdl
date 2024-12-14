@@ -1,0 +1,49 @@
+// This file is part of nand2tetris, as taught in The Hebrew University, and
+// was written by Aviv Yaish. It is an extension to the specifications given
+// [here](https://www.nand2tetris.org) (Shimon Schocken and Noam Nisan, 2017),
+// as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
+// Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
+
+
+// The ExtendAlu chip is an extension of the standard ALU which also supports
+// shift operations.
+// The inputs of the extended ALU are instruction[9], x[16], y[16].
+// The "ng" and "zr" output pins behave the same as in the regular ALU.
+// The "out" output is defined as follows:
+// If instruction[8]=1 and instruction[7]=1 the output is identical to the 
+// regular ALU, where:
+// instruction[5]=zx, instruction[4]=nx, ..., instruction[0]=no
+// Else, if instruction[8]=0 and instruction[7]=1, the output is a shift:
+// - If instruction[4] == 0, the input "y" will be shifted, otherwise "x".
+// - If instruction[5] == 0, the shift will be a right-shift, otherwise left.
+// - All other inputs are undefined.
+
+CHIP ExtendAlu {
+     IN x[16], y[16], instruction[9];
+     OUT out[16], zr, ng;
+     
+     PARTS:
+     ShiftLeft(in=x, out=xShiftLeft);
+     ShiftLeft(in=y, out=yShiftLeft);
+     ShiftRight(in=x, out=xShiftRight);
+     ShiftRight(in=y, out=yShiftRight);
+
+     Mux16(a=xShiftRight, b=xShiftLeft, sel=instruction[5], out=xShift);
+     Mux16(a=yShiftRight, b=yShiftLeft, sel=instruction[5], out=yShift);
+
+     Mux16(a=yShift, b=xShift, sel=instruction[4], out=shiftOut, 
+               out[0..7]=shiftRightHalf, out[8..15]=shiftLeftHalf, out[15]=shiftNg);
+
+     ALU(x=x, y=y, zx=instruction[5], nx=instruction[4], zy=instruction[3],
+                   ny=instruction[2], f=instruction[1], no=instruction[0],
+                   out=aluOut, zr=aluZr, ng=aluNg);
+     
+     Or8Way(in=shiftRightHalf, out=notZeroRightHalf);
+     Or8Way(in=shiftLeftHalf, out=notZeroLeftHalf);
+     Or(a=notZeroLeftHalf, b=notZeroRightHalf, out=shiftNotZero);
+     Not(in=shiftNotZero, out=shiftZr);
+
+     Mux16(a=shiftOut, b=aluOut, sel=instruction[8], out=out);
+     Mux(a=shiftZr, b=aluZr, sel=instruction[8], out=zr);
+     Mux(a=shiftNg, b=aluNg, sel=instruction[8], out=ng);
+}
