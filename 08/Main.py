@@ -28,6 +28,9 @@ def translate_file(input_file: typing.TextIO, output_file: typing.TextIO, bootst
     input_filename, _ = os.path.splitext(os.path.basename(input_file.name))
     code_writer.set_file_name(input_filename)
 
+    if (bootstrap):
+        code_writer.write_bootstrap()
+
     while parser.has_more_commands():
         if parser.command_type() == "C_ARITHMETIC":
             code_writer.write_arithmetic(parser.arg1())

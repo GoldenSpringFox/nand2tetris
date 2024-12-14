@@ -8,6 +8,9 @@ Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 import typing
 
 
+INITIAL_STACK_POINTER = 256
+INITIAL_SYSTEM_FUNCTION_NAME = "Sys.init"
+
 """
 add, sub, and, or, eq, gt, lt
 neg, not, shiftleft, shiftright
@@ -116,6 +119,19 @@ class CodeWriter:
         # For example, using code similar to:
         # input_filename, input_extension = os.path.splitext(os.path.basename(input_file.name))
         self.filename = filename
+
+    def write_bootstrap(self) -> None:
+        result = (
+            f"@{INITIAL_STACK_POINTER}\n"
+            "D=A\n"
+            "@SP\n"
+            "M=D\n"
+            )
+        result += (
+            f"@{INITIAL_SYSTEM_FUNCTION_NAME}\n"
+            "0;JMP\n"
+        )
+        self.output_stream.write(result)
 
     def write_arithmetic(self, command: str) -> None:
         """Writes assembly code that is the translation of the given 
@@ -430,13 +446,13 @@ class CodeWriter:
         )
         for pointer in ["LCL", "ARG", "THIS", "THAT"]:
             result += self.str_push_pointer_on_stack(pointer)
-        result += (
+        result += (         # ARG = SP-5-n_args
             "@SP\n"
             "D=M\n"
             "@5\n"
-            "D=D+A\n"
+            "D=D-A\n"
             f"@{n_args}\n"
-            "D=D+A\n"
+            "D=D-A\n"
             "@ARG\n"
             "M=D\n"
         )
