@@ -11,10 +11,8 @@ import typing
 from Parser import Parser
 from CodeWriter import CodeWriter
 
-
 def translate_file(
-        input_file: typing.TextIO, output_file: typing.TextIO,
-        bootstrap: bool) -> None:
+        input_file: typing.TextIO, output_file: typing.TextIO) -> None:
     """Translates a single file.
 
     Args:
@@ -24,7 +22,19 @@ def translate_file(
             first file we are translating.
     """
     # Your code goes here!
-    pass
+    # It might be good to start with something like:
+    parser = Parser(input_file)
+    code_writer = CodeWriter(output_file)
+    
+    input_filename, _ = os.path.splitext(os.path.basename(input_file.name))
+    code_writer.set_file_name(input_filename)
+
+    while parser.has_more_commands():
+        if parser.command_type() == "C_ARITHMETIC":
+            code_writer.write_arithmetic(parser.arg1())
+        elif parser.command_type() in ("C_PUSH", "C_POP"):
+            code_writer.write_push_pop(parser.command_type(), parser.arg1(), int(parser.arg2()))
+        parser.advance()
 
 
 if "__main__" == __name__:
