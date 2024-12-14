@@ -10,6 +10,9 @@ import re
 
 C_COMMAND_PATTERN = re.compile(r"^(?:(.*)=)?([^=;]*)(?:;(.*))?$")
 
+ARITHMETIC_COMMANDS = ["add", "sub", "and", "or", "eq", "gt", "lt", "neg", "not", "shiftleft", "shiftright"]
+
+
 class Parser:
     """
     # Parser
@@ -95,12 +98,25 @@ class Parser:
             "C_PUSH", "C_POP", "C_LABEL", "C_GOTO", "C_IF", "C_FUNCTION",
             "C_RETURN", "C_CALL".
         """
-        if (len(self.lineParts) == 1):
+
+        if self.lineParts[0] in ARITHMETIC_COMMANDS:
             return "C_ARITHMETIC"
-        elif (self.lineParts[0] == "push"):
+        elif self.lineParts[0] == "push":
             return "C_PUSH"
-        elif (self.lineParts[0] == "pop"):
+        elif self.lineParts[0] == "pop":
             return "C_POP"
+        elif self.lineParts[0] == "label":
+            return "C_LABEL"
+        elif self.lineParts[0] == "goto":
+            return "C_GOTO"
+        elif self.lineParts[0] == "if-goto":
+            return "C_IF"
+        elif self.lineParts[0] == "call":
+            return "C_CALL"
+        elif self.lineParts[0] == "function":
+            return "C_FUNCTION"
+        elif self.lineParts[0] == "return":
+            return "C_RETURN"
 
     def arg1(self) -> str:
         """

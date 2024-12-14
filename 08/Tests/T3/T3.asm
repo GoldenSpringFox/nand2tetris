@@ -1,20 +1,38 @@
-// push constant 17
-@17
+// push constant 32767
+@32767
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 17
-@17
+// neg
+@SP
+A=M-1
+M=-M
+// push constant 1
+@1
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// eq
+// sub
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M-D
+// push constant 32767
+@32767
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// lt
 @SP
 AM=M-1
 D=M
@@ -41,7 +59,7 @@ M=0
 (SECOND_NEG_FIRST_POS0)
 @SP
 A=M-1
-M=0
+M=-1
 @COMP_END0
 0;JMP
 (SECOND_NEG_FIRST_NEG0)
@@ -54,7 +72,7 @@ D=M
 A=A-1
 D=M-D
 @COMP_SUCCESS0
-D;JEQ
+D;JLT
 @SP
 A=M-1
 M=0
@@ -65,23 +83,41 @@ M=0
 A=M-1
 M=-1
 (COMP_END0)
-// push constant 892
-@892
+// push constant 32767
+@32767
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 891
-@891
+// push constant 32767
+@32767
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// lt
+// neg
+@SP
+A=M-1
+M=-M
+// push constant 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// sub
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M-D
+// gt
 @SP
 AM=M-1
 D=M
@@ -102,13 +138,13 @@ D=M
 D;JLT
 @SP
 A=M-1
-M=0
+M=-1
 @COMP_END1
 0;JMP
 (SECOND_NEG_FIRST_POS1)
 @SP
 A=M-1
-M=-1
+M=0
 @COMP_END1
 0;JMP
 (SECOND_NEG_FIRST_NEG1)
@@ -121,7 +157,7 @@ D=M
 A=A-1
 D=M-D
 @COMP_SUCCESS1
-D;JLT
+D;JGT
 @SP
 A=M-1
 M=0
@@ -132,16 +168,34 @@ M=0
 A=M-1
 M=-1
 (COMP_END1)
-// push constant 32767
-@32767
+// push constant 20000
+@20000
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 32766
-@32766
+// neg
+@SP
+A=M-1
+M=-M
+// push constant 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// sub
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M-D
+// push constant 30000
+@30000
 D=A
 @SP
 A=M
@@ -199,38 +253,28 @@ M=0
 A=M-1
 M=-1
 (COMP_END2)
-// push constant 56
-@56
+// push constant 20000
+@20000
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 31
-@31
+// push constant 30000
+@30000
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 53
-@53
-D=A
+// neg
 @SP
-A=M
-M=D
-@SP
-M=M+1
-// add
-@SP
-AM=M-1
-D=M
-A=A-1
-M=M+D
-// push constant 112
-@112
+A=M-1
+M=-M
+// push constant 1
+@1
 D=A
 @SP
 A=M
@@ -243,27 +287,54 @@ AM=M-1
 D=M
 A=A-1
 M=M-D
-// neg
+// gt
+@SP
+AM=M-1
+D=M
+@FIRST_NEG3
+D;JLT
 @SP
 A=M-1
-M=-M
-// and
-@SP
-AM=M-1
 D=M
-A=A-1
-M=M&D
-// push constant 82
-@82
-D=A
+@SECOND_NEG_FIRST_POS3
+D;JLT
+@REGULAR_COMPARISON3
+0;JMP
+(FIRST_NEG3)
+@SP
+A=M-1
+D=M
+@SECOND_NEG_FIRST_NEG3
+D;JLT
+@SP
+A=M-1
+M=-1
+@COMP_END3
+0;JMP
+(SECOND_NEG_FIRST_POS3)
+@SP
+A=M-1
+M=0
+@COMP_END3
+0;JMP
+(SECOND_NEG_FIRST_NEG3)
+@REGULAR_COMPARISON3
+0;JMP
+(REGULAR_COMPARISON3)
 @SP
 A=M
-M=D
-@SP
-M=M+1
-// or
-@SP
-AM=M-1
 D=M
 A=A-1
-M=M|D
+D=M-D
+@COMP_SUCCESS3
+D;JGT
+@SP
+A=M-1
+M=0
+@COMP_END3
+0;JMP
+(COMP_SUCCESS3)
+@SP
+A=M-1
+M=-1
+(COMP_END3)

@@ -11,8 +11,7 @@ import typing
 from Parser import Parser
 from CodeWriter import CodeWriter
 
-def translate_file(
-        input_file: typing.TextIO, output_file: typing.TextIO) -> None:
+def translate_file(input_file: typing.TextIO, output_file: typing.TextIO, bootstrap: bool) -> None:
     """Translates a single file.
 
     Args:
@@ -34,6 +33,19 @@ def translate_file(
             code_writer.write_arithmetic(parser.arg1())
         elif parser.command_type() in ("C_PUSH", "C_POP"):
             code_writer.write_push_pop(parser.command_type(), parser.arg1(), int(parser.arg2()))
+        elif parser.command_type() == "C_LABEL":
+            code_writer.write_label(parser.arg1())
+        elif parser.command_type() == "C_GOTO":
+            code_writer.write_goto(parser.arg1())
+        elif parser.command_type() == "C_IF":
+            code_writer.write_if(parser.arg1())
+        elif parser.command_type() == "C_FUNCTION":
+            code_writer.write_function(parser.arg1(), int(parser.arg2()))
+        elif parser.command_type() == "C_RETURN":
+            code_writer.write_return()
+        elif parser.command_type() == "C_CALL":
+            code_writer.write_call(parser.arg1(), int(parser.arg2()))
+        
         parser.advance()
 
 

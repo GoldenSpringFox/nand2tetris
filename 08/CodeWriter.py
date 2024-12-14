@@ -329,7 +329,7 @@ class CodeWriter:
         Args:
             label (str): the label to write.
         """
-        result = f"({self.filename}.{self.current_function}${label})"
+        result = f"({self.filename}.{self.current_function}${label})\n"
         self.output_stream.write(result)
     
     def write_goto(self, label: str) -> None:
@@ -340,7 +340,7 @@ class CodeWriter:
         """
         result = (
             f"@{self.filename}.{self.current_function}${label}\n"
-            "0;JMP")
+            "0;JMP\n")
         self.output_stream.write(result)
     
     def write_if(self, label: str) -> None:
@@ -355,7 +355,7 @@ class CodeWriter:
             "AM=M-1\n"
             "D=M\n"
             f"@{self.filename}.{self.current_function}${label}\n"
-            "D;JNE")
+            "D;JNE\n")
         self.output_stream.write(result)
     
     def write_function(self, function_name: str, n_vars: int) -> None:
@@ -378,7 +378,6 @@ class CodeWriter:
         #   push constant 0     // initializes the local variables to 0
 
         self.current_function = function_name
-        self.write_label()
 
         push_zero_on_stack = (
             "@SP\n"
@@ -487,7 +486,7 @@ class CodeWriter:
             "M=D\n"
         )
         result += (             # return_address = *(frame-5)
-            "@R13"
+            "@R13\n"
             "D=M\n"
             "@5\n"
             "A=D-A\n"
@@ -497,10 +496,10 @@ class CodeWriter:
         )
         result += (             # *ARG = pop()
             "@SP\n"
-            "A=A-1\n"
+            "A=M-1\n"
             "D=M\n"
             "@SP\n"
-            "M=M-1"
+            "M=M-1\n"
             "@ARG\n"
             "A=M\n"
             "M=D\n"
