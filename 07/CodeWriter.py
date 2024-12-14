@@ -139,10 +139,52 @@ class CodeWriter:
             "gt": "JLT",
             "lt": "JGT"
         }
+        comparisonResult = {
+            "eq": ("0", "0"),
+            "gt": ("0", "-1"),
+            "lt": ("-1", "0")
+        }
+
         result = (
             f"// {command}\n"
             "@SP\n"
             "AM=M-1\n"
+            "D=M\n"
+            # jump #1 D sign 
+            f"@FIRST_NEG{self.comparisonCounter}\n"
+            "D;JLT\n"
+            "A=A-1\n"
+            # jump #2 D sign
+            "D=M\n"
+            f"@SECOND_NEG_FIRST_POS{self.comparisonCounter}\n"
+            "D;JLT\n"
+            # both are positive
+            f"@REGULAR_COMPARISON{self.comparisonCounter}\n"
+            "0;JMP\n"
+            f"(FIRST_NEG{self.comparisonCounter})\n"
+            "A=A-1\n"
+            "D=M\n"
+            f"@SECOND_NEG_FIRST_NEG{self.comparisonCounter}\n"
+            "D;JLT\n"
+            # first is negative, second is positive
+            "@SP\n"
+            "A=M-1\n"
+            f"M={comparisonResult[command][0]}\n"
+            f"@COMP_END{self.comparisonCounter}\n"
+            "0;JMP\n"
+            # first is negative, second is positive
+            f"(SECOND_NEG_FIRST_POS{self.comparisonCounter})\n"
+            "@SP\n"
+            "A=M-1\n"
+            f"M={comparisonResult[command][1]}\n"
+            f"@COMP_END{self.comparisonCounter}\n"
+            "0;JMP\n"
+            f"(SECOND_NEG_FIRST_NEG{self.comparisonCounter})\n"
+            f"@REGULAR_COMPARISON{self.comparisonCounter}\n"
+            "0;JMP\n"
+            f"(REGULAR_COMPARISON{self.comparisonCounter})\n"
+            "@SP\n"
+            "A=M-1\n"
             "D=M\n"
             "A=A-1\n"
             "D=D-M\n"
