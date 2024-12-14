@@ -136,13 +136,13 @@ class CodeWriter:
     def write_comparison(self, command: str):
         jumpComparison = {
             "eq": "JEQ",
-            "gt": "JLT",
-            "lt": "JGT"
+            "gt": "JGT",
+            "lt": "JLT"
         }
         comparisonResult = {
             "eq": ("0", "0"),
-            "gt": ("0", "-1"),
-            "lt": ("-1", "0")
+            "gt": ("-1", "0"),
+            "lt": ("0", "-1")
         }
 
         result = (
@@ -153,7 +153,8 @@ class CodeWriter:
             # jump #1 D sign 
             f"@FIRST_NEG{self.comparisonCounter}\n"
             "D;JLT\n"
-            "A=A-1\n"
+            "@SP\n"
+            "A=M-1\n"
             # jump #2 D sign
             "D=M\n"
             f"@SECOND_NEG_FIRST_POS{self.comparisonCounter}\n"
@@ -162,17 +163,18 @@ class CodeWriter:
             f"@REGULAR_COMPARISON{self.comparisonCounter}\n"
             "0;JMP\n"
             f"(FIRST_NEG{self.comparisonCounter})\n"
-            "A=A-1\n"
+            "@SP\n"
+            "A=M-1\n"
             "D=M\n"
             f"@SECOND_NEG_FIRST_NEG{self.comparisonCounter}\n"
             "D;JLT\n"
-            # first is negative, second is positive
+            # first is negative second is positive
             "@SP\n"
             "A=M-1\n"
             f"M={comparisonResult[command][0]}\n"
             f"@COMP_END{self.comparisonCounter}\n"
             "0;JMP\n"
-            # first is negative, second is positive
+            # first is positive second is negative
             f"(SECOND_NEG_FIRST_POS{self.comparisonCounter})\n"
             "@SP\n"
             "A=M-1\n"
@@ -184,10 +186,10 @@ class CodeWriter:
             "0;JMP\n"
             f"(REGULAR_COMPARISON{self.comparisonCounter})\n"
             "@SP\n"
-            "A=M-1\n"
+            "A=M\n"
             "D=M\n"
             "A=A-1\n"
-            "D=D-M\n"
+            "D=M-D\n"
             f"@COMP_SUCCESS{self.comparisonCounter}\n"
             f"D;{jumpComparison[command]}\n"
             "@SP\n"
