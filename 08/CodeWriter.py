@@ -127,11 +127,8 @@ class CodeWriter:
             "@SP\n"
             "M=D\n"
             )
-        result += (
-            f"@{INITIAL_SYSTEM_FUNCTION_NAME}\n"
-            "0;JMP\n"
-        )
         self.output_stream.write(result)
+        self.write_call(INITIAL_SYSTEM_FUNCTION_NAME, 0)
 
     def write_arithmetic(self, command: str) -> None:
         """Writes assembly code that is the translation of the given 
@@ -345,7 +342,7 @@ class CodeWriter:
         Args:
             label (str): the label to write.
         """
-        result = f"({self.filename}.{self.current_function}${label})\n"
+        result = f"({self.current_function}${label})\n"
         self.output_stream.write(result)
     
     def write_goto(self, label: str) -> None:
@@ -355,7 +352,7 @@ class CodeWriter:
             label (str): the label to go to.
         """
         result = (
-            f"@{self.filename}.{self.current_function}${label}\n"
+            f"@{self.current_function}${label}\n"
             "0;JMP\n")
         self.output_stream.write(result)
     
@@ -370,7 +367,7 @@ class CodeWriter:
             "@SP\n"
             "AM=M-1\n"
             "D=M\n"
-            f"@{self.filename}.{self.current_function}${label}\n"
+            f"@{self.current_function}${label}\n"
             "D;JNE\n")
         self.output_stream.write(result)
     
@@ -403,7 +400,7 @@ class CodeWriter:
             "M=M+1\n")
 
         result = (f"// function {function_name} {n_vars}\n"
-            f"({self.filename}.{function_name})\n") + push_zero_on_stack * n_vars
+            f"({function_name})\n") + push_zero_on_stack * n_vars
         self.output_stream.write(result)
 
     def write_call(self, function_name: str, n_args: int) -> None:
@@ -433,7 +430,7 @@ class CodeWriter:
         # goto function_name    // transfers control to the callee
         # (return_address)      // injects the return address label into the code
         
-        return_address = f"{self.filename}.{self.current_function}$ret.{self.callCounter}"
+        return_address = f"{self.current_function}$ret.{self.callCounter}"
         result = f"// call {function_name} {n_args}\n"
         result += (
             f"@{return_address}\n"
@@ -463,7 +460,7 @@ class CodeWriter:
             "M=D\n"
         )
         result += (
-            f"@{self.filename}.{function_name}\n"
+            f"@{function_name}\n"
             "0;JMP\n"
         )
         result += f"({return_address})\n"
