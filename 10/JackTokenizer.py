@@ -9,6 +9,8 @@ import typing
 
 
 SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~', '^', '#']
+KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 
+            'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
 
 
 class JackTokenizer:
@@ -105,7 +107,9 @@ class JackTokenizer:
         # A good place to start is to read all the lines of the input:
         self.input_characters = input_stream.read()
         self.current_token = None
+        self.current_token_type = None
         self.next_token_index = 0
+        self.next_token_type = None
         self.next_token = None
         self._has_more_tokens = True
         self._find_next_token()
@@ -124,6 +128,7 @@ class JackTokenizer:
         Initially there is no current token.
         """
         self.current_token = self.next_token
+        self.current_token_type = self.next_token_type
         self._find_next_token()
 
     def _find_next_token(self) -> None:
@@ -132,8 +137,11 @@ class JackTokenizer:
             self._has_more_tokens = False
             return
         current_character = self.input_characters[current_index]
-
-        if current_character.isalpha():
+        
+        if current_character.isspace():
+            self.next_token_index += 1
+            self._find_next_token()
+        elif current_character.isalpha():
             self._find_next_token_alpha()
         elif current_character.isnumeric():
             self._find_next_token_numeric()
@@ -155,6 +163,9 @@ class JackTokenizer:
             current_index += 1
         self.next_token = token
         self.next_token_index = current_index
+        
+        self.next_token_type = "KEYWORD" if self.next_token in KEYWORDS else "IDENTIFIER"
+            
 
     def _find_next_token_numeric(self):
         token = ""
@@ -164,18 +175,20 @@ class JackTokenizer:
             current_index += 1
         self.next_token = token
         self.next_token_index = current_index
+        self.next_token_type = "INT_CONST"
 
     def _find_next_token_string(self):
         token = ""
-        current_index = self.next_token_index
+        current_index = self.next_token_index + 1
         while self.input_characters[current_index] != '"':
             token += self.input_characters[current_index]
             current_index += 1
         self.next_token = token
         self.next_token_index = current_index + 1
+        self.next_token_type = "STRING_CONST"
 
     def _skip_comment(self):
-        current_index = self.next_token_index
+        current_index = self.next_token_index + 1
         if self.input_characters[current_index] == "/":
             current_index += 1
             while self.input_characters[current_index] != "\n":
@@ -190,6 +203,7 @@ class JackTokenizer:
     def _find_next_token_symbol(self):
         self.next_token = self.input_characters[self.next_token_index]
         self.next_token_index += 1
+        self.next_token_type = "SYMBOL"
 
     def token_type(self) -> str:
         """
@@ -197,8 +211,7 @@ class JackTokenizer:
             str: the type of the current token, can be
             "KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"
         """
-        # Your code goes here!
-        pass
+        return self.current_token_type
 
     def keyword(self) -> str:
         """
