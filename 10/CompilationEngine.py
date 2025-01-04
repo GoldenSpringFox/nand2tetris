@@ -68,16 +68,16 @@ class CompilationEngine:
         if words is not None and token not in words:
             raise Exception(f"Expected {words}. Found {token}")
         
-        self.output_stream.write(f"{'\t' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}> {token} </{TOKEN_TYPE_XML[token_type]}>\n")
+        self.output_stream.write(f"{'  ' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}> {token} </{TOKEN_TYPE_XML[token_type]}>\n")
         self.tokenizer.advance()
 
     def open_tag(self, tag: str):
-        self.output_stream.write(f"{'\t' * self.tab_depth}<{tag}>\n")
+        self.output_stream.write(f"{'  ' * self.tab_depth}<{tag}>\n")
         self.tab_depth += 1
 
     def close_tag(self, tag: str):
         self.tab_depth -= 1
-        self.output_stream.write(f"{'\t' * self.tab_depth}</{tag}>\n")
+        self.output_stream.write(f"{'  ' * self.tab_depth}</{tag}>\n")
 
     def matches_keyword(self, *words: str) -> bool:
         return self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() in words
@@ -294,8 +294,11 @@ class CompilationEngine:
         self.open_tag("returnStatement")
 
         self.eat("return")
-        self.compile_expression()
-        self.eat(";")
+        if self.matches_symbol(";"):
+            self.eat(";")
+        else:
+            self.compile_expression()
+            self.eat(";")
         
         self.close_tag("returnStatement")
 
@@ -327,12 +330,14 @@ class CompilationEngine:
 
         if (token_type in ["INT_CONST", "STRING_CONST"] or 
             self.matches_keyword(*KEYWORD_CONSTANTS)):
-            self.eat()
+            self.eat(types=["INT_CONST", "STRING_CONST", "KEYWORD"])
+            self.close_tag("term")
             return
         
         if (self.matches_symbol(*UNARY_OPERANDS)):
             self.eat()
             self.compile_term()
+            self.close_tag("term")
             return
 
         if (self.matches_symbol("(")):
@@ -370,6 +375,7 @@ class CompilationEngine:
         self.open_tag("expressionList")
         
         if self.matches_symbol(")"):
+            self.close_tag("expressionList")
             return
         
         self.compile_expression()
@@ -380,6 +386,3 @@ class CompilationEngine:
         
         self.close_tag("expressionList")
         
-        # if ((self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() not in KEYWORD_CONSTANTS) or
-        #     (self.tokenizer.token_type() == "SYMBOL" and self.tokenizer.keyword() not in KEYWORD_CONSTANTS)):
-        #     ...
