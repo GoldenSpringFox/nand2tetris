@@ -15,6 +15,9 @@ TOKEN_TYPE_XML = {
     "INT_CONST": "integerConstant", 
     "STRING_CONST": "stringConstant"
 }
+OPERANDS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+UNARY_OPERANDS = ['-', '~', '^', '#']
+KEYWORD_CONSTANTS = ["true", "false", "null", "this"]
 
 
 class CompilationEngine:
@@ -298,8 +301,15 @@ class CompilationEngine:
 
     def compile_expression(self) -> None:
         """Compiles an expression."""
-        # Your code goes here!
-        pass
+        self.open_tag("expression")
+        
+        self.compile_term()
+
+        while self.matches_symbol(*OPERANDS):
+            self.eat(types="SYMBOL")
+            self.compile_term()
+        
+        self.close_tag("expression")
 
     def compile_term(self) -> None:
         """Compiles a term. 
@@ -311,18 +321,65 @@ class CompilationEngine:
         to distinguish between the three possibilities. Any other token is not
         part of this term and should not be advanced over.
         """
-        # Your code goes here!
-        pass
-
-    def compile_subroutine_call(self) -> None:
-        pass
-        # self.eat(types="IDENTIFIER")
+        self.open_tag("term")
         
-        # self.eat("(")
-        # self.compile_expression_list()
-        # self.eat(")")
+        token_type : TOKEN_TYPE = self.tokenizer.token_type()
+
+        if (token_type in ["INT_CONST", "STRING_CONST"] or 
+            self.matches_keyword(*KEYWORD_CONSTANTS)):
+            self.eat()
+            return
+        
+        if (self.matches_symbol(*UNARY_OPERANDS)):
+            self.eat()
+            self.compile_term()
+            return
+
+        if (self.matches_symbol("(")):
+            self.eat("(")
+            self.compile_expression()
+            self.eat(")")
+
+        self.eat(types="IDENTIFIER")
+        
+        if self.matches_symbol("["):
+            self.eat("[")
+            self.compile_expression()
+            self.eat("]")
+        
+        elif self.matches_symbol("(", "."):
+            self.compile_subroutine_call(True)
+        
+        self.close_tag("term")
+            
+
+    def compile_subroutine_call(self, ignoreFirstElement : bool = False) -> None:
+        if (not ignoreFirstElement):
+            self.eat(types="IDENTIFIER")
+        
+        if not self.matches_symbol("("):
+            self.eat(".")
+            self.eat(types="IDENTIFIER")
+            
+        self.eat("(")
+        self.compile_expression_list()
+        self.eat(")")
 
     def compile_expression_list(self) -> None:
         """Compiles a (possibly empty) comma-separated list of expressions."""
-        # Your code goes here!
-        pass
+        self.open_tag("expressionList")
+        
+        if self.matches_symbol(")"):
+            return
+        
+        self.compile_expression()
+
+        while self.matches_symbol(","):
+            self.eat(",")
+            self.compile_expression()        
+        
+        self.close_tag("expressionList")
+        
+        # if ((self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() not in KEYWORD_CONSTANTS) or
+        #     (self.tokenizer.token_type() == "SYMBOL" and self.tokenizer.keyword() not in KEYWORD_CONSTANTS)):
+        #     ...
