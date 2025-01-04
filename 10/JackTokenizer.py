@@ -100,8 +100,8 @@ class JackTokenizer:
         """
         # Your code goes here!
         # A good place to start is to read all the lines of the input:
-        # input_lines = input_stream.read().splitlines()
-        pass
+        input_lines = input_stream.read().splitlines()
+        print(input_lines)
 
     def has_more_tokens(self) -> bool:
         """Do we have more tokens in the input?
