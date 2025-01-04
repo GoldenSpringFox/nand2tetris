@@ -10,6 +10,7 @@ import typing
 
 SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~', '^', '#']
 
+
 class JackTokenizer:
     """Removes all comments from the input stream and breaks it
     into Jack language tokens, as specified by the Jack grammar.
@@ -107,7 +108,7 @@ class JackTokenizer:
         self.next_token_index = 0
         self.next_token = None
         self._has_more_tokens = True
-        self.find_next_token()
+        self._find_next_token()
 
     def has_more_tokens(self) -> bool:
         """Do we have more tokens in the input?
@@ -126,33 +127,69 @@ class JackTokenizer:
         self._find_next_token()
 
     def _find_next_token(self) -> None:
-        if currentIndex >= len(self.input_characters):
+        current_index = self.next_token_index
+        if current_index >= len(self.input_characters):
             self._has_more_tokens = False
             return
-        
-        currentIndex = self.next_token_index
-        currentCharacter = self.input_characters[currentIndex]
+        current_character = self.input_characters[current_index]
 
-        if (currentCharacter.isalpha()):
+        if current_character.isalpha():
             self._find_next_token_alpha()
-        elif (currentCharacter.isnumeric()):
+        elif current_character.isnumeric():
             self._find_next_token_numeric()
-        elif (currentCharacter == '"'):
+        elif current_character == '"':
             self._find_next_token_string()
-        elif (currentCharacter == '/' and 
-              currentIndex+1 < len(self.input_characters) and 
-              self.input_characters[currentIndex+1] in ['/', '*']):
+        elif (current_character == '/' and
+              current_index+1 < len(self.input_characters) and
+              self.input_characters[current_index+1] in ['/', '*']):
             self._skip_comment()
             self._find_next_token()
-        elif (currentCharacter in SYMBOLS):
+        elif current_character in SYMBOLS:
             self._find_next_token_symbol()
 
     def _find_next_token_alpha(self) -> None:
         token = ""
-        currentIndex = self.next_token_index
-        currentCharacter = self.input_characters[currentIndex]
+        current_index = self.next_token_index
+        while self.input_characters[current_index].isalnum():
+            token += self.input_characters[current_index]
+            current_index += 1
+        self.next_token = token
+        self.next_token_index = current_index
 
+    def _find_next_token_numeric(self):
+        token = ""
+        current_index = self.next_token_index
+        while self.input_characters[current_index].isdigit():
+            token += self.input_characters[current_index]
+            current_index += 1
+        self.next_token = token
+        self.next_token_index = current_index
 
+    def _find_next_token_string(self):
+        token = ""
+        current_index = self.next_token_index
+        while self.input_characters[current_index] != '"':
+            token += self.input_characters[current_index]
+            current_index += 1
+        self.next_token = token
+        self.next_token_index = current_index + 1
+
+    def _skip_comment(self):
+        current_index = self.next_token_index
+        if self.input_characters[current_index] == "/":
+            current_index += 1
+            while self.input_characters[current_index] != "\n":
+                current_index += 1
+            self.next_token_index = current_index + 1
+        else:
+            current_index += 1
+            while not (self.input_characters[current_index] == "*" and self.input_characters[current_index + 1] == "/"):
+                current_index += 1
+            self.next_token_index = current_index + 2
+
+    def _find_next_token_symbol(self):
+        self.next_token = self.input_characters[self.next_token_index]
+        self.next_token_index += 1
 
     def token_type(self) -> str:
         """
