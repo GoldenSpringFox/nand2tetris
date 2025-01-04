@@ -16,6 +16,7 @@ TOKEN_TYPE_XML = {
     "STRING_CONST": "stringConstant"
 }
 
+
 class CompilationEngine:
     """Gets input from a JackTokenizer and emits its parsed structure into an
     output stream.
@@ -41,36 +42,28 @@ class CompilationEngine:
         token_type = self.tokenizer.token_type()
         token = None
         
-        if (token_type not in types):
+        if token_type not in types:
             raise Exception(f"Expected one of {types} types. Found {token_type}")
 
-        if (token_type == "KEYWORD"):
+        if token_type == "KEYWORD":
             token = self.tokenizer.keyword().lower()  # :(
-        elif (token_type == "IDENTIFIER"):
+        elif token_type == "IDENTIFIER":
             token = self.tokenizer.identifier()
-        elif (token_type == "INT_CONST"):
+        elif token_type == "INT_CONST":
             token = self.tokenizer.int_val()
-        elif (token_type == "STRING_CONST"):
+        elif token_type == "STRING_CONST":
             token = self.tokenizer.string_val()
-        elif (token_type == "SYMBOL"):
+        elif token_type == "SYMBOL":
             token = self.tokenizer.symbol()
         
-        if (word != None and token != word):
+        if word is not None and token != word:
             raise Exception(f"Expected {word}. Found {token}")
         
         self.output_stream.write(f"{'\t' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}> {token} </{TOKEN_TYPE_XML[token_type]}>")
         self.tokenizer.advance()
 
-    def matches_keyword(self, *words: list[str]) -> bool:
-        token_type = self.tokenizer.token_type()
-        token = None
-
-        if (token_type == "KEYWORD"):
-            token = self.tokenizer.keyword().lower()  # :(
-        else:
-            return False
-        
-        return token in words
+    def matches_keyword(self, *words: str) -> bool:
+        return self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() in words
 
     def compile_class(self) -> None:
         """Compiles a complete class."""
@@ -79,9 +72,9 @@ class CompilationEngine:
         self.eat(types=["IDENTIFIER"])
         self.eat(word="{")
 
-        while(self.matches_keyword('static', 'field')):
+        while self.matches_keyword('static', 'field'):
             self.compile_class_var_dec()
-        while(self.matches_keyword('constructor', 'function', 'method')):
+        while self.matches_keyword('constructor', 'function', 'method'):
             self.compile_subroutine()
         self.eat("}")
         self.output_stream("</class>")

@@ -6,13 +6,13 @@ as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
 Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 """
 import typing
-from typing import Literal
-
+from typing import Literal, Optional, cast
 
 SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~', '^', '#']
 KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 
             'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
 TOKEN_TYPE = Literal["KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"]
+
 
 class JackTokenizer:
     """Removes all comments from the input stream and breaks it
@@ -107,10 +107,10 @@ class JackTokenizer:
         # Your code goes here!
         # A good place to start is to read all the lines of the input:
         self.input_characters = input_stream.read()
-        self._current_token : TOKEN_TYPE = None
-        self._current_token_type = None
+        self._current_token = None
+        self._current_token_type: Optional[TOKEN_TYPE] = None
         self._next_token_index = 0
-        self._next_token_type : TOKEN_TYPE = None
+        self._next_token_type: Optional[TOKEN_TYPE] = None
         self._next_token = None
         self._has_more_tokens = True
         self._find_next_token()
@@ -167,7 +167,6 @@ class JackTokenizer:
         
         self._next_token_type = "KEYWORD" if self._next_token in KEYWORDS else "IDENTIFIER"
             
-
     def _find_next_token_numeric(self):
         token = ""
         current_index = self._next_token_index
@@ -212,7 +211,7 @@ class JackTokenizer:
             str: the type of the current token, can be
             "KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"
         """
-        return self._current_token_type
+        return cast(TOKEN_TYPE, self._current_token_type)
 
     def keyword(self) -> str:
         """
