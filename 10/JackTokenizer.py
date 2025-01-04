@@ -6,12 +6,13 @@ as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
 Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 """
 import typing
+from typing import Literal
 
 
 SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~', '^', '#']
 KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 
             'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
-
+TOKEN_TYPE = Literal["KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"]
 
 class JackTokenizer:
     """Removes all comments from the input stream and breaks it
@@ -106,11 +107,11 @@ class JackTokenizer:
         # Your code goes here!
         # A good place to start is to read all the lines of the input:
         self.input_characters = input_stream.read()
-        self.current_token = None
-        self.current_token_type = None
-        self.next_token_index = 0
-        self.next_token_type = None
-        self.next_token = None
+        self._current_token : TOKEN_TYPE = None
+        self._current_token_type = None
+        self._next_token_index = 0
+        self._next_token_type : TOKEN_TYPE = None
+        self._next_token = None
         self._has_more_tokens = True
         self._find_next_token()
 
@@ -127,19 +128,19 @@ class JackTokenizer:
         This method should be called if has_more_tokens() is true. 
         Initially there is no current token.
         """
-        self.current_token = self.next_token
-        self.current_token_type = self.next_token_type
+        self._current_token = self._next_token
+        self._current_token_type = self._next_token_type
         self._find_next_token()
 
     def _find_next_token(self) -> None:
-        current_index = self.next_token_index
+        current_index = self._next_token_index
         if current_index >= len(self.input_characters):
             self._has_more_tokens = False
             return
         current_character = self.input_characters[current_index]
         
         if current_character.isspace():
-            self.next_token_index += 1
+            self._next_token_index += 1
             self._find_next_token()
         elif current_character == '_' or current_character.isalpha():
             self._find_next_token_alpha()
@@ -157,61 +158,61 @@ class JackTokenizer:
 
     def _find_next_token_alpha(self) -> None:
         token = ""
-        current_index = self.next_token_index
+        current_index = self._next_token_index
         while self.input_characters[current_index] == '_' or self.input_characters[current_index].isalnum():
             token += self.input_characters[current_index]
             current_index += 1
-        self.next_token = token
-        self.next_token_index = current_index
+        self._next_token = token
+        self._next_token_index = current_index
         
-        self.next_token_type = "KEYWORD" if self.next_token in KEYWORDS else "IDENTIFIER"
+        self._next_token_type = "KEYWORD" if self._next_token in KEYWORDS else "IDENTIFIER"
             
 
     def _find_next_token_numeric(self):
         token = ""
-        current_index = self.next_token_index
+        current_index = self._next_token_index
         while self.input_characters[current_index].isdigit():
             token += self.input_characters[current_index]
             current_index += 1
-        self.next_token = token
-        self.next_token_index = current_index
-        self.next_token_type = "INT_CONST"
+        self._next_token = token
+        self._next_token_index = current_index
+        self._next_token_type = "INT_CONST"
 
     def _find_next_token_string(self):
         token = ""
-        current_index = self.next_token_index + 1
+        current_index = self._next_token_index + 1
         while self.input_characters[current_index] not in ['"', '\n']:
             token += self.input_characters[current_index]
             current_index += 1
-        self.next_token = token
-        self.next_token_index = current_index + 1
-        self.next_token_type = "STRING_CONST"
+        self._next_token = token
+        self._next_token_index = current_index + 1
+        self._next_token_type = "STRING_CONST"
 
     def _skip_comment(self):
-        current_index = self.next_token_index + 1
+        current_index = self._next_token_index + 1
         if self.input_characters[current_index] == "/":
             current_index += 1
             while self.input_characters[current_index] != "\n":
                 current_index += 1
-            self.next_token_index = current_index + 1
+            self._next_token_index = current_index + 1
         else:
             current_index += 1
             while not (self.input_characters[current_index] == "*" and self.input_characters[current_index + 1] == "/"):
                 current_index += 1
-            self.next_token_index = current_index + 2
+            self._next_token_index = current_index + 2
 
     def _find_next_token_symbol(self):
-        self.next_token = self.input_characters[self.next_token_index]
-        self.next_token_index += 1
-        self.next_token_type = "SYMBOL"
+        self._next_token = self.input_characters[self._next_token_index]
+        self._next_token_index += 1
+        self._next_token_type = "SYMBOL"
 
-    def token_type(self) -> str:
+    def token_type(self) -> TOKEN_TYPE:
         """
         Returns:
             str: the type of the current token, can be
             "KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"
         """
-        return self.current_token_type
+        return self._current_token_type
 
     def keyword(self) -> str:
         """
@@ -222,7 +223,7 @@ class JackTokenizer:
             "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD", "LET", "DO", 
             "IF", "ELSE", "WHILE", "RETURN", "TRUE", "FALSE", "NULL", "THIS"
         """
-        return self.current_token.upper()
+        return self._current_token.upper()
 
     def symbol(self) -> str:
         """
@@ -233,7 +234,7 @@ class JackTokenizer:
             symbol: '{' | '}' | '(' | ')' | '[' | ']' | '.' | ',' | ';' | '+' | 
               '-' | '*' | '/' | '&' | '|' | '<' | '>' | '=' | '~' | '^' | '#'
         """
-        return self.current_token
+        return self._current_token
 
     def identifier(self) -> str:
         """
@@ -245,7 +246,7 @@ class JackTokenizer:
                   starting with a digit. You can assume keywords cannot be
                   identifiers, so 'self' cannot be an identifier, etc'.
         """
-        return self.current_token
+        return self._current_token
 
     def int_val(self) -> int:
         """
@@ -255,7 +256,7 @@ class JackTokenizer:
             Recall that integerConstant was defined in the grammar like so:
             integerConstant: A decimal number in the range 0-32767.
         """
-        return int(self.current_token)
+        return int(self._current_token)
 
     def string_val(self) -> str:
         """
@@ -266,4 +267,4 @@ class JackTokenizer:
             StringConstant: '"' A sequence of Unicode characters not including 
                       double quote or newline '"'
         """
-        return self.current_token
+        return self._current_token
