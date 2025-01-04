@@ -5,7 +5,6 @@ was written by Aviv Yaish. It is an extension to the specifications given
 as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
 Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 """
-import typing
 from JackTokenizer import JackTokenizer, TOKEN_TYPE
 
 TOKEN_TYPE_XML = {
@@ -41,7 +40,8 @@ class CompilationEngine:
 
         self.tokenizer.advance()
     
-    def eat(self, words: str | list[str] = None, types: TOKEN_TYPE | list[TOKEN_TYPE] = ["KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST"]):
+    def eat(self, words: str | list[str] = None,
+            types: TOKEN_TYPE | list[TOKEN_TYPE] = ("KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST")):
         if isinstance(words, str):
             words = [words]
 
@@ -67,8 +67,11 @@ class CompilationEngine:
         
         if words is not None and token not in words:
             raise Exception(f"Expected {words}. Found {token}")
-        
-        self.output_stream.write(f"{'  ' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}> {token} </{TOKEN_TYPE_XML[token_type]}>\n")
+
+        token = (str(token).replace("&", "&amp;").replace(">", "&gt;")
+                 .replace("<", "&lt;").replace('"', "&quot;"))
+        self.output_stream.write(f"{'  ' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}>"
+                                 f" {token} </{TOKEN_TYPE_XML[token_type]}>\n")
         self.tokenizer.advance()
 
     def open_tag(self, tag: str):
@@ -116,7 +119,7 @@ class CompilationEngine:
         
         self.eat(words=["static", "field"])
         
-        self.compile_type(self)
+        self.compile_type()
         
         self.eat(types="IDENTIFIER")
         while self.matches_symbol(","):
@@ -139,7 +142,7 @@ class CompilationEngine:
         if self.matches_keyword("void"):
             self.eat()
         else:
-            self.compile_type(self)
+            self.compile_type()
 
         self.eat(types="IDENTIFIER")
 
@@ -326,24 +329,27 @@ class CompilationEngine:
         """
         self.open_tag("term")
         
-        token_type : TOKEN_TYPE = self.tokenizer.token_type()
+        token_type: TOKEN_TYPE = self.tokenizer.token_type()
 
         if (token_type in ["INT_CONST", "STRING_CONST"] or 
-            self.matches_keyword(*KEYWORD_CONSTANTS)):
+                self.matches_keyword(*KEYWORD_CONSTANTS)):
             self.eat(types=["INT_CONST", "STRING_CONST", "KEYWORD"])
             self.close_tag("term")
             return
         
-        if (self.matches_symbol(*UNARY_OPERANDS)):
+        if self.matches_symbol(*UNARY_OPERANDS):
             self.eat()
             self.compile_term()
             self.close_tag("term")
             return
 
-        if (self.matches_symbol("(")):
+        if self.matches_symbol("("):
             self.eat("(")
             self.compile_expression()
             self.eat(")")
+            self.close_tag("term")
+            return
+
 
         self.eat(types="IDENTIFIER")
         
@@ -357,9 +363,8 @@ class CompilationEngine:
         
         self.close_tag("term")
             
-
-    def compile_subroutine_call(self, ignoreFirstElement : bool = False) -> None:
-        if (not ignoreFirstElement):
+    def compile_subroutine_call(self, ignore_first_element: bool = False) -> None:
+        if not ignore_first_element:
             self.eat(types="IDENTIFIER")
         
         if not self.matches_symbol("("):
