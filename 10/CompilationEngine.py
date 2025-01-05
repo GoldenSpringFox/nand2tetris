@@ -166,6 +166,7 @@ class CompilationEngine:
 
             while self.matches_symbol(","):
                 self.eat(types="SYMBOL")
+                self.compile_type()
                 self.eat(types="IDENTIFIER")
         
         self.close_tag("parameterList")
