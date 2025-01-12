@@ -5,7 +5,7 @@ was written by Aviv Yaish. It is an extension to the specifications given
 as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
 Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 """
-import typing
+from typing import Dict
 from enum import Enum
 
 class VARIABLE_KINDS(Enum): 
@@ -34,13 +34,13 @@ class SymbolTable:
     field_count : int = 0
     arg_count : int = 0
     var_count : int = 0
-    class_dictionary : dict[str, DictionaryEntry] = {}
-    subroutine_dictionary : dict[str, DictionaryEntry] = {}
+    class_dictionary : Dict[str, DictionaryEntry]
+    subroutine_dictionary : Dict[str, DictionaryEntry]
 
     def __init__(self) -> None:
         """Creates a new empty symbol table."""
-        # Your code goes here!
-        pass
+        self.class_dictionary = {}
+        self.subroutine_dictionary = {}
 
     def start_subroutine(self) -> None:
         """Starts a new subroutine scope (i.e., resets the subroutine's 
@@ -64,7 +64,7 @@ class SymbolTable:
         if kind in [VARIABLE_KINDS.STATIC, VARIABLE_KINDS.FIELD]:
             self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_count if kind == VARIABLE_KINDS.STATIC else self.field_count)
         else:
-            self.class_dictionary[name] = (type, kind, self.arg_count if kind == VARIABLE_KINDS.ARG else self.var_count)
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_count if kind == VARIABLE_KINDS.ARG else self.var_count)
 
     def var_count(self, kind: str) -> int:
         """
@@ -97,9 +97,9 @@ class SymbolTable:
         """
         value = self.subroutine_dictionary.get(name)
         if (value != None):
-            return value[1]
+            return value.kind
         
-        return self.class_dictionary.get(name)
+        return self.class_dictionary.get(name).kind
         
 
     def type_of(self, name: str) -> str:
@@ -110,8 +110,11 @@ class SymbolTable:
         Returns:
             str: the type of the named identifier in the current scope.
         """
-        # Your code goes here!
-        pass
+        value = self.subroutine_dictionary.get(name)
+        if (value != None):
+            return value.type
+        
+        return self.class_dictionary.get(name).type
 
     def index_of(self, name: str) -> int:
         """
@@ -121,5 +124,8 @@ class SymbolTable:
         Returns:
             int: the index assigned to the named identifier.
         """
-        # Your code goes here!
-        pass
+        value = self.subroutine_dictionary.get(name)
+        if (value != None):
+            return value.index
+        
+        return self.class_dictionary.get(name).index
