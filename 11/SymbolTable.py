@@ -8,7 +8,7 @@ Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 from typing import Dict
 from enum import Enum
 
-class VARIABLE_KINDS(Enum): 
+class VariableKind(Enum): 
     STATIC = "STATIC"
     FIELD = "FIELD"
     ARG = "ARG"
@@ -16,7 +16,7 @@ class VARIABLE_KINDS(Enum):
 
 class DictionaryEntry:
     type : str
-    kind : VARIABLE_KINDS
+    kind : VariableKind
     index : int
 
     def __init__(self, type, kind, index):
@@ -29,7 +29,6 @@ class SymbolTable:
     compilation: type, kind and running index. The symbol table has two nested
     scopes (class/subroutine).
     """
-
     static_index : int = 0
     field_index : int = 0
     arg_index : int = 0
@@ -61,10 +60,10 @@ class SymbolTable:
             kind (str): the kind of the new identifier, can be:
             "STATIC", "FIELD", "ARG", "VAR".
         """
-        if kind in [VARIABLE_KINDS.STATIC, VARIABLE_KINDS.FIELD]:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_index if kind == VARIABLE_KINDS.STATIC else self.field_index)
+        if kind in [VariableKind.STATIC, VariableKind.FIELD]:
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_index if kind == VariableKind.STATIC else self.field_index)
         else:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VARIABLE_KINDS.ARG else self.var_index)
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VariableKind.ARG else self.var_index)
 
     def var_count(self, kind: str) -> int:
         """
@@ -76,13 +75,13 @@ class SymbolTable:
             the current scope.
         """
         match(kind):
-            case VARIABLE_KINDS.STATIC.value:
+            case VariableKind.STATIC.value:
                 return self.static_index
-            case VARIABLE_KINDS.FIELD.value:
+            case VariableKind.FIELD.value:
                 return self.field_index
-            case VARIABLE_KINDS.ARG.value:
+            case VariableKind.ARG.value:
                 return self.arg_index
-            case VARIABLE_KINDS.VAR.value:
+            case VariableKind.VAR.value:
                 return self.var_index
         return -1
 
@@ -97,10 +96,9 @@ class SymbolTable:
         """
         value = self.subroutine_dictionary.get(name)
         if (value != None):
-            return value.kind
+            return value.kind.value
         
-        return self.class_dictionary.get(name).kind
-        
+        return self.class_dictionary.get(name).kind.value
 
     def type_of(self, name: str) -> str:
         """
