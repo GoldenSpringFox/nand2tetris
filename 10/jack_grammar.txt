@@ -36,6 +36,6 @@
     X subroutineCall: (subroutineName '(' expressionList ')') | ((className | 
                       varName) '.' subroutineName '(' expressionList ')')
     - expressionList: (expression (',' expression)* )?
-    - op: '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
-    - unaryOp: '-' | '~' | '^' | '#'
-    - keywordConstant: 'true' | 'false' | 'null' | 'this'
+    X op: '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
+    X unaryOp: '-' | '~' | '^' | '#'
+    X keywordConstant: 'true' | 'false' | 'null' | 'this'
