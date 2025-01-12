@@ -66,7 +66,7 @@ class SymbolTable:
         else:
             self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VARIABLE_KINDS.ARG else self.var_index)
 
-    def var_index(self, kind: str) -> int:
+    def var_count(self, kind: str) -> int:
         """
         Args:
             kind (str): can be "STATIC", "FIELD", "ARG", "VAR".
