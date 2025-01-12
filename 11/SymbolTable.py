@@ -127,3 +127,4 @@ class SymbolTable:
             return value.index
         
         return self.class_dictionary.get(name).index
+ 

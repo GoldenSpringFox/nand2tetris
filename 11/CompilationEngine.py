@@ -5,7 +5,10 @@ was written by Aviv Yaish. It is an extension to the specifications given
 as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
 Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 """
+import typing
 from JackTokenizer import JackTokenizer, TOKEN_TYPE
+from SymbolTable import SymbolTable
+from VMWriter import VMWriter
 
 TOKEN_TYPE_XML = {
     "KEYWORD": "keyword", 
@@ -24,19 +27,16 @@ class CompilationEngine:
     output stream.
     """
 
-    def __init__(self, input_stream: JackTokenizer, output_stream) -> None:
+    def __init__(self, input_stream: JackTokenizer, symbol_table : SymbolTable, vmwriter : VMWriter) -> None:
         """
         Creates a new compilation engine with the given input and output. The
         next routine called must be compileClass()
         :param input_stream: The input stream.
         :param output_stream: The output stream.
         """
-        # Your code goes here!
-        # Note that you can write to output_stream like so:
-        # output_stream.write("Hello world!\n")
         self.tokenizer = input_stream
-        self.output_stream = output_stream
-        self.tab_depth = 0
+        self.symbol_table = symbol_table
+        self.vmwriter = vmwriter
 
         self.tokenizer.advance()
     
@@ -70,17 +70,15 @@ class CompilationEngine:
 
         token = (str(token).replace("&", "&amp;").replace(">", "&gt;")
                  .replace("<", "&lt;").replace('"', "&quot;"))
-        self.output_stream.write(f"{'  ' * self.tab_depth}<{TOKEN_TYPE_XML[token_type]}>"
+        self.output_stream.write(f"<{TOKEN_TYPE_XML[token_type]}>"
                                  f" {token} </{TOKEN_TYPE_XML[token_type]}>\n")
         self.tokenizer.advance()
 
     def open_tag(self, tag: str):
-        self.output_stream.write(f"{'  ' * self.tab_depth}<{tag}>\n")
-        self.tab_depth += 1
+        self.output_stream.write(f"<{tag}>\n")
 
     def close_tag(self, tag: str):
-        self.tab_depth -= 1
-        self.output_stream.write(f"{'  ' * self.tab_depth}</{tag}>\n")
+        self.output_stream.write(f"</{tag}>\n")
 
     def matches_keyword(self, *words: str) -> bool:
         return self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() in words
