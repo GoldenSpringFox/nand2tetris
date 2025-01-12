@@ -62,7 +62,7 @@ class SymbolTable:
             "STATIC", "FIELD", "ARG", "VAR".
         """
         if kind in [VARIABLE_KINDS.STATIC, VARIABLE_KINDS.FIELD]:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_count if kind == VARIABLE_KINDS.STATIC else self.field_count)
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_index if kind == VARIABLE_KINDS.STATIC else self.field_index)
         else:
             self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VARIABLE_KINDS.ARG else self.var_index)
 
