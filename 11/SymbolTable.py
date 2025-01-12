@@ -30,10 +30,10 @@ class SymbolTable:
     scopes (class/subroutine).
     """
 
-    static_count : int = 0
-    field_count : int = 0
-    arg_count : int = 0
-    var_count : int = 0
+    static_index : int = 0
+    field_index : int = 0
+    arg_index : int = 0
+    var_index : int = 0
     class_dictionary : Dict[str, DictionaryEntry]
     subroutine_dictionary : Dict[str, DictionaryEntry]
 
@@ -47,8 +47,8 @@ class SymbolTable:
         symbol table).
         """
         self.subroutine_dictionary = {}
-        self.arg_count = 0
-        self.var_count = 0
+        self.arg_index = 0
+        self.var_index = 0
 
     def define(self, name: str, type: str, kind: str) -> None:
         """Defines a new identifier of a given name, type and kind and assigns 
@@ -64,9 +64,9 @@ class SymbolTable:
         if kind in [VARIABLE_KINDS.STATIC, VARIABLE_KINDS.FIELD]:
             self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_count if kind == VARIABLE_KINDS.STATIC else self.field_count)
         else:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_count if kind == VARIABLE_KINDS.ARG else self.var_count)
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VARIABLE_KINDS.ARG else self.var_index)
 
-    def var_count(self, kind: str) -> int:
+    def var_index(self, kind: str) -> int:
         """
         Args:
             kind (str): can be "STATIC", "FIELD", "ARG", "VAR".
@@ -77,13 +77,13 @@ class SymbolTable:
         """
         match(kind):
             case VARIABLE_KINDS.STATIC.value:
-                return self.static_count
+                return self.static_index
             case VARIABLE_KINDS.FIELD.value:
-                return self.field_count
+                return self.field_index
             case VARIABLE_KINDS.ARG.value:
-                return self.arg_count
+                return self.arg_index
             case VARIABLE_KINDS.VAR.value:
-                return self.var_count
+                return self.var_index
         return -1
 
     def kind_of(self, name: str) -> str:
