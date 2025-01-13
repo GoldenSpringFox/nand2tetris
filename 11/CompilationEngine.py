@@ -17,8 +17,23 @@ TOKEN_TYPE_XML = {
     "INT_CONST": "integerConstant",
     "STRING_CONST": "stringConstant"
 }
-OPERANDS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
-UNARY_OPERANDS = ['-', '~', '^', '#']
+OPERATORS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+OPERATOR_TO_VM_DICT = {
+    '+': "ADD", 
+    '-': "SUB", 
+    '&': "AND", 
+    '|': "OR", 
+    '<': "LT",
+    '>': "GT", 
+    '=': "EQ"
+}
+UNARY_OPERATORS = ['-', '~', '^', '#']
+UNARY_OPERATOR_TO_VM_DICT = {
+    '-': "NEG",
+    '~': "NOT",
+    '^': "SHIFTLEFT",
+    '#': "SHIFTRIGHT"
+}
 KEYWORD_CONSTANTS = ["true", "false", "null", "this"]
 
 
@@ -301,40 +316,58 @@ class CompilationEngine:
         """Compiles a do statement."""
         self.eat("do")
         identifier = self.eat(types="IDENTIFIER")
+
         if not self.matches_symbol("("):
             self.eat(".")
             identifier += "." + self.eat(types="IDENTIFIER")
+        
         self.eat("(")
         num_of_params = self.compile_expression_list()
         self.eat(")")
+
         self.vmwriter.write_call(identifier, num_of_params)
+        self.vmwriter.write_pop("TEMP", 0)
+        
         self.eat(";")
 
 
     def compile_return(self) -> None:
         """Compiles a return statement."""
-        self.open_tag("returnStatement")
-
         self.eat("return")
+        
         if self.matches_symbol(";"):
-            self.eat(";")
+            self.vmwriter.write_push("CONST", 0)
         else:
             self.compile_expression()
-            self.eat(";")
+        
+        self.vmwriter.write_return()
 
-        self.close_tag("returnStatement")
+        self.eat(";")
 
     def compile_expression(self) -> None:
         """Compiles an expression."""
-        self.open_tag("expression")
-
+        operator_stack : list = []
+        
         self.compile_term()
 
-        while self.matches_symbol(*OPERANDS):
-            self.eat(types="SYMBOL")
-            self.compile_term()
+        while self.matches_symbol(*OPERATORS):
+            operator = self.eat(types="SYMBOL")
+            operator_stack.append(operator)
 
-        self.close_tag("expression")
+            self.compile_term()
+        
+        while (operator_stack.count > 0):
+            operator = operator_stack.pop()
+            self.handle_operator(self.vmwriter.write_arithmetic())
+
+    def handle_operator(self, operator : str) -> None:
+        # '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
+        if operator == '*':
+            self.vmwriter.write_call("Math.Multiply", 2)
+        elif operator == '/':
+            self.vmwriter.write_call("Math.Divide", 2)
+        else:
+            self.vmwriter.write_arithmetic(OPERATOR_TO_VM_DICT[operator])
 
     def compile_term(self) -> None:
         """Compiles a term. 
@@ -346,8 +379,6 @@ class CompilationEngine:
         to distinguish between the three possibilities. Any other token is not
         part of this term and should not be advanced over.
         """
-        self.open_tag("term")
-
         token_type: TOKEN_TYPE = self.tokenizer.token_type()
 
         if (token_type in ["INT_CONST", "STRING_CONST"] or
@@ -356,7 +387,7 @@ class CompilationEngine:
             self.close_tag("term")
             return
 
-        if self.matches_symbol(*UNARY_OPERANDS):
+        if self.matches_symbol(*UNARY_OPERATORS):
             self.eat()
             self.compile_term()
             self.close_tag("term")
@@ -376,22 +407,14 @@ class CompilationEngine:
             self.compile_expression()
             self.eat("]")
 
-        elif self.matches_symbol("(", "."):
-            self.compile_subroutine_call(True)
-
-        self.close_tag("term")
-
-    # def compile_subroutine_call(self, ignore_first_element: bool = False) -> None:
-    #     if not ignore_first_element:
-    #         function_name = self.eat(types="IDENTIFIER")
-    #
-    #     if not self.matches_symbol("("):
-    #         self.eat(".")
-    #         self.eat(types="IDENTIFIER")
-    #
-    #     self.eat("(")
-    #     self.compile_expression_list()
-    #     self.eat(")")
+        elif self.matches_symbol("(", "."):        
+            if self.matches_symbol("."):
+                self.eat(".")
+                self.eat(types="IDENTIFIER")
+        
+            self.eat("(")
+            self.compile_expression_list()
+            self.eat(")")
 
     def compile_expression_list(self) -> int:
         """Compiles a (possibly empty) comma-separated list of expressions."""
