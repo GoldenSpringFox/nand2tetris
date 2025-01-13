@@ -319,15 +319,25 @@ class CompilationEngine:
         self.eat("do")
         identifier = self.eat(types="IDENTIFIER")
 
+        arg_count = 0
+
         if not self.matches_symbol("("):
-            self.eat(".")
-            identifier += "." + self.eat(types="IDENTIFIER")
+            identifier_type = self.symbol_table.type_of(identifier)
+            if self.matches_symbol(".") and identifier_type == None:
+                identifier += self.eat(".")
+                identifier += self.eat(types="IDENTIFIER")
+            elif self.matches_symbol("."):
+                self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
+                identifier = identifier_type
+                identifier += self.eat(".")
+                identifier += self.eat(types="IDENTIFIER")
+                arg_count += 1
         
         self.eat("(")
-        num_of_params = self.compile_expression_list()
+        arg_count = self.compile_expression_list()
         self.eat(")")
 
-        self.vmwriter.write_call(identifier, num_of_params)
+        self.vmwriter.write_call(identifier, arg_count)
         self.vmwriter.write_pop("TEMP", 0)
         
         self.eat(";")
@@ -415,6 +425,8 @@ class CompilationEngine:
 
         identifier = self.eat(types="IDENTIFIER")
 
+        arg_count = 0
+
         if self.matches_symbol("["):
             self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
             
@@ -426,13 +438,20 @@ class CompilationEngine:
             self.vmwriter.write_pop("POINTER", 1)
             self.vmwriter.write_push("THAT", 0)
 
-        elif self.matches_symbol("(", "."):    
-            if self.matches_symbol("."):
+        elif self.matches_symbol("(", "."): 
+            identifier_type = self.symbol_table.type_of(identifier)
+            if self.matches_symbol(".") and identifier_type == None:
                 identifier += self.eat(".")
                 identifier += self.eat(types="IDENTIFIER")
+            elif self.matches_symbol("."):
+                self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
+                identifier = identifier_type
+                identifier += self.eat(".")
+                identifier += self.eat(types="IDENTIFIER")
+                arg_count += 1
         
             self.eat("(")
-            arg_count = self.compile_expression_list()
+            arg_count += self.compile_expression_list()
             self.eat(")")
 
             self.vmwriter.write_call(identifier, arg_count)

@@ -12,7 +12,7 @@ SEGMENT_TO_VM = {
     "ARG" : "argument",
     "VAR": "local", 
     "STATIC": "static", 
-    "THIS": "this", 
+    "FIELD": "this", 
     "THAT": "that", 
     "POINTER": "pointer", 
     "TEMP": "temp"

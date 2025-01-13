@@ -93,7 +93,7 @@ class SymbolTable:
                 return self.var_index
         return -1
 
-    def kind_of(self, name: str) -> str:
+    def kind_of(self, name: str) -> str | None:
         """
         Args:
             name (str): name of an identifier.
@@ -106,9 +106,13 @@ class SymbolTable:
         if (value != None):
             return value.kind
         
-        return self.class_dictionary.get(name).kind
+        value = self.class_dictionary.get(name)
+        if (value != None):
+            return value.kind
 
-    def type_of(self, name: str) -> str:
+        return None
+
+    def type_of(self, name: str) -> str | None:
         """
         Args:
             name (str):  name of an identifier.
@@ -120,7 +124,11 @@ class SymbolTable:
         if (value != None):
             return value.type
         
-        return self.class_dictionary.get(name).type
+        value = self.class_dictionary.get(name)
+        if (value != None):
+            return value.type
+
+        return None
 
     def index_of(self, name: str) -> int:
         """
@@ -134,5 +142,9 @@ class SymbolTable:
         if (value != None):
             return value.index
         
-        return self.class_dictionary.get(name).index
+        value = self.class_dictionary.get(name)
+        if (value != None):
+            return value.index
+
+        return None
  
