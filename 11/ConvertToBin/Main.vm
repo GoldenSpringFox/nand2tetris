@@ -16,9 +16,9 @@ function Main.convert 1
 push constant 1
 neg
 pop local 0
-label WHILE Main.convert.0
+label WHILE_Main.convert.0
 neg
-if-goto WHILE_END Main.convert.0
+if-goto WHILE_END_Main.convert.0
 push constant 1
 add
 pop local 0
@@ -53,8 +53,8 @@ label IF_FALSE_Main.convert.1
 push constant 0
 pop local 0
 label IF_END_Main.convert.1
-goto WHILE Main.convert.0
-label WHILE_END Main.convert.0
+goto WHILE_Main.convert.0
+label WHILE_END_Main.convert.0
 push constant 0
 return
 function Main.nextMask 1
@@ -71,11 +71,11 @@ call Math.multiply 2
 return
 label IF_END_Main.nextMask.2
 function Main.fillMemory 3
-label WHILE Main.fillMemory.1
+label WHILE_Main.fillMemory.1
 push constant 0
 gt
 neg
-if-goto WHILE_END Main.fillMemory.1
+if-goto WHILE_END_Main.fillMemory.1
 call Memory.poke 2
 pop temp 0
 push constant 1
@@ -84,7 +84,7 @@ pop argument 0
 push constant 1
 add
 pop argument 0
-goto WHILE Main.fillMemory.1
-label WHILE_END Main.fillMemory.1
+goto WHILE_Main.fillMemory.1
+label WHILE_END_Main.fillMemory.1
 push constant 0
 return

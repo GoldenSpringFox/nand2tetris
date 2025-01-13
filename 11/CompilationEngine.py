@@ -294,7 +294,7 @@ class CompilationEngine:
 
     def compile_while(self) -> None:
         """Compiles a while statement."""
-        self.vmwriter.write_label(f"WHILE {self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        self.vmwriter.write_label(f"WHILE_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
 
         self.eat("while")
         self.eat("(")
@@ -302,14 +302,14 @@ class CompilationEngine:
         self.eat(")")
 
         self.vmwriter.write_arithmetic("NEG")
-        self.vmwriter.write_if(f"WHILE_END {self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        self.vmwriter.write_if(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
 
         self.eat("{")
         self.compile_statements()
         self.eat("}")
 
-        self.vmwriter.write_goto(f"WHILE {self.class_name}.{self.subroutine_name}.{self.while_counter}")
-        self.vmwriter.write_label(f"WHILE_END {self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        self.vmwriter.write_goto(f"WHILE_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        self.vmwriter.write_label(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
         self.while_counter += 1
 
     def compile_do(self) -> None:
