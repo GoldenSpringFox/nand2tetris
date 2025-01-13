@@ -381,40 +381,68 @@ class CompilationEngine:
         """
         token_type: TOKEN_TYPE = self.tokenizer.token_type()
 
-        if (token_type in ["INT_CONST", "STRING_CONST"] or
-                self.matches_keyword(*KEYWORD_CONSTANTS)):
-            self.eat(types=["INT_CONST", "STRING_CONST", "KEYWORD"])
-            self.close_tag("term")
+        if (token_type in ["INT_CONST", "STRING_CONST"] or self.matches_keyword(*KEYWORD_CONSTANTS)):
+            token = self.eat(types=["INT_CONST", "STRING_CONST", "KEYWORD"])
+
+            if token_type == "INT_CONST":
+                self.vmwriter.write_push("CONST", int(token))
+            elif token_type == "STRING_CONST":
+                self.write_string(token)
+                # self.vmwriter.write_call("String.dispose", 1)
+            elif token in ["false", "null"]:
+                self.vmwriter.write_push("CONST", 0)
+            elif token == "true":
+                self.vmwriter.write_push("CONST", 1)
+                self.vmwriter.write_arithmetic("NEG")
+            elif token == "this":
+                self.vmwriter.write_push("POINTER", 0)
             return
 
         if self.matches_symbol(*UNARY_OPERATORS):
-            self.eat()
+            unary_operator = self.eat()
+            
             self.compile_term()
-            self.close_tag("term")
+            
+            self.vmwriter.write_arithmetic(UNARY_OPERATOR_TO_VM_DICT[unary_operator])
             return
 
         if self.matches_symbol("("):
             self.eat("(")
             self.compile_expression()
             self.eat(")")
-            self.close_tag("term")
             return
 
-        self.eat(types="IDENTIFIER")
+        identifier = self.eat(types="IDENTIFIER")
 
         if self.matches_symbol("["):
+            self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
+            
             self.eat("[")
             self.compile_expression()
             self.eat("]")
 
-        elif self.matches_symbol("(", "."):        
+            self.vmwriter.write_arithmetic("ADD")
+            self.vmwriter.write_pop("POINTER", 1)
+            self.vmwriter.write_push("THAT", 0)
+
+        elif self.matches_symbol("(", "."):    
             if self.matches_symbol("."):
-                self.eat(".")
-                self.eat(types="IDENTIFIER")
+                identifier += self.eat(".")
+                identifier += self.eat(types="IDENTIFIER")
         
             self.eat("(")
-            self.compile_expression_list()
+            arg_count = self.compile_expression_list()
             self.eat(")")
+
+            self.vmwriter.write_call(identifier, arg_count)
+
+    def write_string(self, string: str) -> None:
+        self.vmwriter.write_push("constant", len(string))
+        self.vmwriter.write_call("String.new", 1)
+
+        for c in string:
+            self.vmwriter.write_push("constant", ord(c))
+            self.vmwriter.write_call("String.appendChar", 2)
 
     def compile_expression_list(self) -> int:
         """Compiles a (possibly empty) comma-separated list of expressions."""
