@@ -144,6 +144,8 @@ class CompilationEngine:
         You can assume that classes with constructors have at least one field,
         you will understand why this is necessary in project 11.
         """
+        self.symbol_table.start_subroutine()
+
         function_type = self.eat(words=["constructor", "function", "method"])
 
         if self.matches_keyword("void"):
@@ -155,22 +157,28 @@ class CompilationEngine:
         self.subroutine_name = function_name
 
         self.eat("(")
-        arg_count = self.compile_parameter_list()
+        self.compile_parameter_list()
         self.eat(")")
 
-        if function_type == "method":
-            arg_count += 1
+        self.eat("{")
 
-        self.vmwriter.write_function(f"{self.class_name}.{function_name}", arg_count)
+        while self.matches_keyword("var"):
+            self.compile_var_dec()
+        
+        var_count = self.symbol_table.var_count("VAR")
 
-        if function_type == "constructor":  # ? "and self.symbol_table.var_count("FIELD") > 0"
+        self.vmwriter.write_function(f"{self.class_name}.{function_name}", var_count)
+
+        if function_type == "constructor":
             self.vmwriter.write_push("CONST", self.symbol_table.var_count("FIELD"))
             self.vmwriter.write_call("Memory.alloc", 1)
         elif function_type == "method":
             self.vmwriter.write_push("ARG", 0)
             self.vmwriter.write_pop("POINTER", 0)
 
-        self.compile_subroutine_body()
+        self.compile_statements()
+
+        self.eat("}")
 
     def compile_parameter_list(self) -> int:
         """Compiles a (possibly empty) parameter list, not including the 
@@ -193,16 +201,6 @@ class CompilationEngine:
                 self.symbol_table.define(variable_name, variable_type, variable_kind)
 
         return argument_count
-
-    def compile_subroutine_body(self) -> None:
-        self.eat("{")
-
-        while self.matches_keyword("var"):
-            self.compile_var_dec()
-
-        self.compile_statements()
-
-        self.eat("}")
 
     def compile_var_dec(self) -> None:
         """Compiles a var declaration."""
@@ -267,21 +265,24 @@ class CompilationEngine:
 
     def compile_if(self) -> None:
         """Compiles a if statement, possibly with a trailing else clause."""
+        counter = self.if_counter
+        self.if_counter += 1
+
         self.eat("if")
 
         self.eat("(")
         self.compile_expression()
         self.eat(")")
 
-        self.vmwriter.write_arithmetic("NEG")
-        self.vmwriter.write_if(f"IF_FALSE_{self.class_name}.{self.subroutine_name}.{self.if_counter}")
+        self.vmwriter.write_arithmetic("NOT")
+        self.vmwriter.write_if(f"IF_FALSE_{self.class_name}.{self.subroutine_name}.{counter}")
 
         self.eat("{")
         self.compile_statements()
         self.eat("}")
 
-        self.vmwriter.write_goto(f"IF_END_{self.class_name}.{self.subroutine_name}.{self.if_counter}")
-        self.vmwriter.write_label(f"IF_FALSE_{self.class_name}.{self.subroutine_name}.{self.if_counter}")
+        self.vmwriter.write_goto(f"IF_END_{self.class_name}.{self.subroutine_name}.{counter}")
+        self.vmwriter.write_label(f"IF_FALSE_{self.class_name}.{self.subroutine_name}.{counter}")
 
         if self.matches_keyword("else"):
             self.eat("else")
@@ -289,28 +290,29 @@ class CompilationEngine:
             self.compile_statements()
             self.eat("}")
 
-        self.vmwriter.write_label(f"IF_END_{self.class_name}.{self.subroutine_name}.{self.if_counter}")
-        self.if_counter += 1
+        self.vmwriter.write_label(f"IF_END_{self.class_name}.{self.subroutine_name}.{counter}")
 
     def compile_while(self) -> None:
         """Compiles a while statement."""
-        self.vmwriter.write_label(f"WHILE_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        counter = self.while_counter
+        self.while_counter += 1
+        
+        self.vmwriter.write_label(f"WHILE_{self.class_name}.{self.subroutine_name}.{counter}")
 
         self.eat("while")
         self.eat("(")
         self.compile_expression()
         self.eat(")")
 
-        self.vmwriter.write_arithmetic("NEG")
-        self.vmwriter.write_if(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
+        self.vmwriter.write_arithmetic("NOT")
+        self.vmwriter.write_if(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{counter}")
 
         self.eat("{")
         self.compile_statements()
         self.eat("}")
 
-        self.vmwriter.write_goto(f"WHILE_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
-        self.vmwriter.write_label(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{self.while_counter}")
-        self.while_counter += 1
+        self.vmwriter.write_goto(f"WHILE_{self.class_name}.{self.subroutine_name}.{counter}")
+        self.vmwriter.write_label(f"WHILE_END_{self.class_name}.{self.subroutine_name}.{counter}")
 
     def compile_do(self) -> None:
         """Compiles a do statement."""
@@ -434,6 +436,9 @@ class CompilationEngine:
             self.eat(")")
 
             self.vmwriter.write_call(identifier, arg_count)
+        
+        else:
+            self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
 
     def write_string(self, string: str) -> None:
         self.vmwriter.write_push("constant", len(string))
