@@ -41,7 +41,7 @@ class CompilationEngine:
         self.tokenizer.advance()
     
     def eat(self, words: str | list[str] = None,
-            types: TOKEN_TYPE | list[TOKEN_TYPE] = ("KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST")):
+            types: TOKEN_TYPE | list[TOKEN_TYPE] = ("KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST")) -> None | str:
         if isinstance(words, str):
             words = [words]
 
@@ -68,17 +68,14 @@ class CompilationEngine:
         if words is not None and token not in words:
             raise Exception(f"Expected {words}. Found {token}")
 
-        token = (str(token).replace("&", "&amp;").replace(">", "&gt;")
-                 .replace("<", "&lt;").replace('"', "&quot;"))
-        self.output_stream.write(f"<{TOKEN_TYPE_XML[token_type]}>"
-                                 f" {token} </{TOKEN_TYPE_XML[token_type]}>\n")
         self.tokenizer.advance()
+        return token
 
     def open_tag(self, tag: str):
-        self.output_stream.write(f"<{tag}>\n")
+        ...
 
     def close_tag(self, tag: str):
-        self.output_stream.write(f"</{tag}>\n")
+        ...
 
     def matches_keyword(self, *words: str) -> bool:
         return self.tokenizer.token_type() == "KEYWORD" and self.tokenizer.keyword().lower() in words
@@ -88,19 +85,17 @@ class CompilationEngine:
 
     def compile_type(self):
         if self.matches_keyword("int", "char", "boolean"):
-            self.eat(types="KEYWORD")
+            return self.eat(types="KEYWORD")
         else:
-            self.eat(types="IDENTIFIER")
+            return self.eat(types="IDENTIFIER")
     
     def check_if_type(self):
         return self.matches_keyword("int", "char", "boolean") or self.tokenizer.token_type() == "IDENTIFIER"
 
     def compile_class(self) -> None:
         """Compiles a complete class."""
-        self.open_tag("class")
-
         self.eat("class")
-        self.eat(types=["IDENTIFIER"])
+        self.class_name = self.eat(types=["IDENTIFIER"])
         self.eat("{")
 
         while self.matches_keyword('static', 'field'):
@@ -109,24 +104,20 @@ class CompilationEngine:
             self.compile_subroutine()
         self.eat("}")
 
-        self.close_tag("class")
-
     def compile_class_var_dec(self) -> None:
-        """Compiles a static declaration or a field declaration."""
-        self.open_tag("classVarDec")
+        """Compiles a static declaration or a field declaration."""        
+        variable_kind = self.eat(words=["static", "field"]).upper()
+        variable_type = self.compile_type()
+        variable_name = self.eat(types="IDENTIFIER")
+
+        self.symbol_table.define(variable_name, variable_type, variable_kind)
         
-        self.eat(words=["static", "field"])
-        
-        self.compile_type()
-        
-        self.eat(types="IDENTIFIER")
         while self.matches_symbol(","):
-            self.eat(types="SYMBOL")
-            self.eat(types="IDENTIFIER")
+            self.eat(",")
+            variable_name = self.eat(types="IDENTIFIER")
+            self.symbol_table.define(variable_name, variable_type, variable_kind)
 
         self.eat(";")
-
-        self.close_tag("classVarDec")
 
     def compile_subroutine(self) -> None:
         """
@@ -134,44 +125,56 @@ class CompilationEngine:
         You can assume that classes with constructors have at least one field,
         you will understand why this is necessary in project 11.
         """
-        self.open_tag("subroutineDec")
-
-        self.eat(words=["constructor", "function", "method"])
+        function_type = self.eat(words=["constructor", "function", "method"])
+        
         if self.matches_keyword("void"):
             self.eat()
         else:
             self.compile_type()
 
-        self.eat(types="IDENTIFIER")
+        function_name = self.eat(types="IDENTIFIER")
 
         self.eat("(")
-        self.compile_parameter_list()
+        arg_count = self.compile_parameter_list()
         self.eat(")")
+
+        if function_type == "method":
+            arg_count += 1
+        
+        self.vmwriter.write_function(f"{self.class_name}.{function_name}", arg_count)
+
+        if function_type == "constructor": # ? "and self.symbol_table.var_count("FIELD") > 0"
+            self.vmwriter.write_push("CONST", self.symbol_table.var_count("FIELD"))
+            self.vmwriter.write_call("Memory.alloc", 1)
+        elif function_type == "method":
+            self.vmwriter.write_push("ARG", 0)
+            self.vmwriter.write_pop("POINTER", 0)
 
         self.compile_subroutine_body()
 
-        self.close_tag("subroutineDec")
-
-    def compile_parameter_list(self) -> None:
+    def compile_parameter_list(self) -> int:
         """Compiles a (possibly empty) parameter list, not including the 
         enclosing "()".
         """
-        self.open_tag("parameterList")
+        argument_count = 0
+        variable_kind = "ARG"
 
         if self.check_if_type():
-            self.compile_type()
-            self.eat(types="IDENTIFIER")
+            argument_count += 1
+            variable_type = self.compile_type()
+            variable_name = self.eat(types="IDENTIFIER")
+            self.symbol_table.define(variable_name, variable_type, variable_kind)
 
             while self.matches_symbol(","):
-                self.eat(types="SYMBOL")
-                self.compile_type()
-                self.eat(types="IDENTIFIER")
+                argument_count += 1
+                self.eat(",")
+                variable_type = self.compile_type()
+                variable_name = self.eat(types="IDENTIFIER")
+                self.symbol_table.define(variable_name, variable_type, variable_kind)
         
-        self.close_tag("parameterList")
+        return argument_count
 
     def compile_subroutine_body(self) -> None:
-        self.open_tag("subroutineBody")
-
         self.eat("{")
 
         while self.matches_keyword("var"):
@@ -181,32 +184,25 @@ class CompilationEngine:
 
         self.eat("}")
 
-        self.close_tag("subroutineBody")
-
     def compile_var_dec(self) -> None:
         """Compiles a var declaration."""
-        self.open_tag("varDec")
+        variable_kind = self.eat("var").upper()
+        variable_type = self.compile_type()
+        variable_name = self.eat(types="IDENTIFIER")
 
-        self.eat("var")
-
-        self.compile_type()
-
-        self.eat(types="IDENTIFIER")
+        self.symbol_table.define(variable_name, variable_type, variable_kind)
 
         while self.matches_symbol(","):
             self.eat(",")
-            self.eat(types="IDENTIFIER")
+            variable_name = self.eat(types="IDENTIFIER")
+            self.symbol_table.define(variable_name, variable_type, variable_kind)
 
         self.eat(";")
-
-        self.close_tag("varDec")
 
     def compile_statements(self) -> None:
         """Compiles a sequence of statements, not including the enclosing 
         "{}".
         """
-        self.open_tag("statements")
-
         while self.matches_keyword("let", "if", "while", "do", "return"):
             keyword = self.tokenizer.keyword().lower()
             if keyword == "let":
@@ -224,23 +220,28 @@ class CompilationEngine:
 
     def compile_let(self) -> None:
         """Compiles a let statement."""
-        self.open_tag("letStatement")
-
         self.eat("let")
-        self.eat(types="IDENTIFIER")
-
+        variable_name = self.eat(types="IDENTIFIER")
+        is_variable_array_element = False
         if self.matches_symbol("["):
+            is_variable_array_element = True
+            self.vmwriter.write_push(self.symbol_table.kind_of(variable_name),self.symbol_table.index_of(variable_name))
             self.eat("[")
             self.compile_expression()
+            self.vmwriter.write_arithmetic("ADD")
+
             self.eat("]")
 
         self.eat("=")
 
         self.compile_expression()
-
+        if is_variable_array_element:
+            self.vmwriter.write_pop("TEMP", 0)
+            self.vmwriter.write_pop("POINTER", 1)
+            self.vmwriter.write_push("TEMP", 0)
+            self.vmwriter.write_push("THAT", 0)
+        
         self.eat(";")
-
-        self.close_tag("letStatement")
 
     def compile_if(self) -> None:
         """Compiles a if statement, possibly with a trailing else clause."""
