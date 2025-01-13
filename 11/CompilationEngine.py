@@ -330,7 +330,6 @@ class CompilationEngine:
         
         self.eat(";")
 
-
     def compile_return(self) -> None:
         """Compiles a return statement."""
         self.eat("return")
@@ -346,7 +345,7 @@ class CompilationEngine:
 
     def compile_expression(self) -> None:
         """Compiles an expression."""
-        operator_stack : list = []
+        operator_stack: list = []
         
         self.compile_term()
 
@@ -356,11 +355,11 @@ class CompilationEngine:
 
             self.compile_term()
         
-        while (operator_stack.count > 0):
+        while len(operator_stack) > 0:
             operator = operator_stack.pop()
-            self.handle_operator(self.vmwriter.write_arithmetic())
+            self.handle_operator(self.vmwriter.write_arithmetic(operator))
 
-    def handle_operator(self, operator : str) -> None:
+    def handle_operator(self, operator: None | str) -> None:
         # '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
         if operator == '*':
             self.vmwriter.write_call("Math.Multiply", 2)
@@ -381,7 +380,7 @@ class CompilationEngine:
         """
         token_type: TOKEN_TYPE = self.tokenizer.token_type()
 
-        if (token_type in ["INT_CONST", "STRING_CONST"] or self.matches_keyword(*KEYWORD_CONSTANTS)):
+        if token_type in ["INT_CONST", "STRING_CONST"] or self.matches_keyword(*KEYWORD_CONSTANTS):
             token = self.eat(types=["INT_CONST", "STRING_CONST", "KEYWORD"])
 
             if token_type == "INT_CONST":
