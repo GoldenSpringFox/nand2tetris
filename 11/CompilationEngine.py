@@ -357,14 +357,14 @@ class CompilationEngine:
         
         while len(operator_stack) > 0:
             operator = operator_stack.pop()
-            self.handle_operator(self.vmwriter.write_arithmetic(operator))
+            self.handle_operator(operator)
 
     def handle_operator(self, operator: None | str) -> None:
         # '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
         if operator == '*':
-            self.vmwriter.write_call("Math.Multiply", 2)
+            self.vmwriter.write_call("Math.multiply", 2)
         elif operator == '/':
-            self.vmwriter.write_call("Math.Divide", 2)
+            self.vmwriter.write_call("Math.divide", 2)
         else:
             self.vmwriter.write_arithmetic(OPERATOR_TO_VM_DICT[operator])
 

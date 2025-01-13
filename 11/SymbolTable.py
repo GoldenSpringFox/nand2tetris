@@ -8,15 +8,15 @@ Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
 from typing import Dict
 from enum import Enum
 
-class VariableKind(Enum): 
-    STATIC = "STATIC"
-    FIELD = "FIELD"
-    ARG = "ARG"
-    VAR = "VAR"
+# class VariableKind(Enum): 
+#     STATIC = "STATIC"
+#     FIELD = "FIELD"
+#     ARG = "ARG"
+#     VAR = "VAR"
 
 class DictionaryEntry:
     type : str
-    kind : VariableKind
+    kind : str
     index : int
 
     def __init__(self, type, kind, index):
@@ -60,10 +60,10 @@ class SymbolTable:
             kind (str): the kind of the new identifier, can be:
             "STATIC", "FIELD", "ARG", "VAR".
         """
-        if kind in [VariableKind.STATIC, VariableKind.FIELD]:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_index if kind == VariableKind.STATIC else self.field_index)
+        if kind in ["STATIC", "FIELD"]:
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.static_index if kind == "STATIC" else self.field_index)
         else:
-            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == VariableKind.ARG else self.var_index)
+            self.class_dictionary[name] = DictionaryEntry(type, kind, self.arg_index if kind == "ARG" else self.var_index)
 
     def var_count(self, kind: str) -> int:
         """
@@ -75,13 +75,13 @@ class SymbolTable:
             the current scope.
         """
         match(kind):
-            case VariableKind.STATIC.value:
+            case "STATIC":
                 return self.static_index
-            case VariableKind.FIELD.value:
+            case "FIELD":
                 return self.field_index
-            case VariableKind.ARG.value:
+            case "ARG":
                 return self.arg_index
-            case VariableKind.VAR.value:
+            case "VAR":
                 return self.var_index
         return -1
 
@@ -96,9 +96,9 @@ class SymbolTable:
         """
         value = self.subroutine_dictionary.get(name)
         if (value != None):
-            return value.kind.value
+            return value.kind
         
-        return self.class_dictionary.get(name).kind.value
+        return self.class_dictionary.get(name).kind
 
     def type_of(self, name: str) -> str:
         """

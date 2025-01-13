@@ -10,7 +10,7 @@ import typing
 SEGMENT_TO_VM = {
     "CONST": "constant", 
     "ARG" : "argument",
-    "LOCAL": "local", 
+    "VAR": "local", 
     "STATIC": "static", 
     "THIS": "this", 
     "THAT": "that", 
