@@ -124,7 +124,12 @@ class PongGame {
                     }
 
                     let batWidth = batWidth - 2;
-                    do bat.setWidth(batWidth);      
+                    /*
+                    do Output.printString("#bat width: ");
+                    do Output.printInt(batWidth);
+                    */                    
+                    do bat.setWidth(batWidth);
+
                     let score = score + 1;
                     do Output.moveCursor(22,7);
                     do Output.printInt(score);

@@ -148,6 +148,9 @@ class CompilationEngine:
 
         function_type = self.eat(words=["constructor", "function", "method"])
 
+        if function_type == "method":
+            self.symbol_table.arg_index += 1
+
         if self.matches_keyword("void"):
             self.eat()
         else:
@@ -172,6 +175,7 @@ class CompilationEngine:
         if function_type == "constructor":
             self.vmwriter.write_push("CONST", self.symbol_table.var_count("FIELD"))
             self.vmwriter.write_call("Memory.alloc", 1)
+            self.vmwriter.write_pop("POINTER", 0)
         elif function_type == "method":
             self.vmwriter.write_push("ARG", 0)
             self.vmwriter.write_pop("POINTER", 0)
@@ -258,7 +262,7 @@ class CompilationEngine:
             self.vmwriter.write_pop("TEMP", 0)
             self.vmwriter.write_pop("POINTER", 1)
             self.vmwriter.write_push("TEMP", 0)
-            self.vmwriter.write_push("THAT", 0)
+            self.vmwriter.write_pop("THAT", 0)
         else:
             self.vmwriter.write_pop(self.symbol_table.kind_of(variable_name), self.symbol_table.index_of(variable_name))
         self.eat(";")
@@ -321,7 +325,11 @@ class CompilationEngine:
 
         arg_count = 0
 
-        if not self.matches_symbol("("):
+        if self.matches_symbol("("):
+            self.vmwriter.write_push("POINTER", 0)
+            identifier = self.class_name + "." + identifier
+            arg_count += 1
+        else:
             identifier_type = self.symbol_table.type_of(identifier)
             if self.matches_symbol(".") and identifier_type == None:
                 identifier += self.eat(".")
@@ -334,7 +342,7 @@ class CompilationEngine:
                 arg_count += 1
         
         self.eat("(")
-        arg_count = self.compile_expression_list()
+        arg_count += self.compile_expression_list()
         self.eat(")")
 
         self.vmwriter.write_call(identifier, arg_count)
@@ -460,11 +468,11 @@ class CompilationEngine:
             self.vmwriter.write_push(self.symbol_table.kind_of(identifier), self.symbol_table.index_of(identifier))
 
     def write_string(self, string: str) -> None:
-        self.vmwriter.write_push("constant", len(string))
+        self.vmwriter.write_push("CONST", len(string))
         self.vmwriter.write_call("String.new", 1)
 
         for c in string:
-            self.vmwriter.write_push("constant", ord(c))
+            self.vmwriter.write_push("CONST", ord(c))
             self.vmwriter.write_call("String.appendChar", 2)
 
     def compile_expression_list(self) -> int:

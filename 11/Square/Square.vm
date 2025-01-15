@@ -1,13 +1,15 @@
 function Square.new 0
 push constant 3
 call Memory.alloc 1
+pop pointer 0
 push argument 0
 pop this 0
 push argument 1
 pop this 1
 push argument 2
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 push pointer 0
 return
@@ -72,13 +74,15 @@ lt
 and
 not
 if-goto IF_FALSE_Square.incSize.0
-call erase 0
+push pointer 0
+call Square.erase 1
 pop temp 0
 push this 2
 push constant 2
 add
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 goto IF_END_Square.incSize.0
 label IF_FALSE_Square.incSize.0
@@ -93,13 +97,15 @@ push constant 2
 gt
 not
 if-goto IF_FALSE_Square.decSize.1
-call erase 0
+push pointer 0
+call Square.erase 1
 pop temp 0
 push this 2
 push constant 2
 sub
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 goto IF_END_Square.decSize.1
 label IF_FALSE_Square.decSize.1
