@@ -15,12 +15,21 @@ class Array {
     /** Constructs a new Array of the given size. */
     function Array new(int size) {
         var Array arr;
-        let arr = Memory.alloc(size);
+        if (size > 0) {
+            let arr = Memory.alloc(size);
+        }
+        else {
+            let arr = 0;
+        }
         return arr;
     }
 
     /** Disposes this array. */
     method void dispose() {
+        if (~this) {
+            return;
+        }
+        
         do Memory.deAlloc(this);
         return;
     }
