@@ -121,7 +121,12 @@ class Keyboard {
         function int readInt(String message) {
             // This should behave exactly like the built-in OS.
             var String line;
+            var int temp;
+            
             let line = Keyboard.readLine(message);
-            return line.intValue();
+            let temp = line.intValue();
+
+            do line.dispose();
+            return temp;
         }
 }

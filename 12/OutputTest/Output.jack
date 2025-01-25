@@ -21,6 +21,8 @@ class Output {
     static Array charMaps;
     static Array cursorPosition;
     static Array screen;
+    static int maskZeroesOnes;
+    static int maskOnesZeroes;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
@@ -30,8 +32,12 @@ class Output {
         let cursorPosition[0] = 0;
         let cursorPosition[1] = 0;
         do Output.moveCursor(cursorPosition[0], cursorPosition[1]);
+
+        let maskZeroesOnes = 255;
+        let maskOnesZeroes = ~maskZeroesOnes;
         
         let screen = 16384;
+        return;
     }
 
     // Initializes the character map array
@@ -190,7 +196,8 @@ class Output {
         let cursorPosition[0] = i;
         let cursorPosition[1] = j;
 
-        printChar(0);
+        do Output.printChar(0);
+        return;
     }
 
     /** Displays the given character at the cursor location,
@@ -198,29 +205,84 @@ class Output {
     function void printChar(char c) {
         // Your implementation should be as efficient as possible.
         // For example, you can draw multiple pixels at once, for each row.
+        var int i, j;
+        var bool isLeftHalfOfByte;
+        var int bytePointer;
+        var Array characterMap;
+        var int byteContent;
 
-        var int jOffset;
-        var int screenCellPointer;
+        let i = cursorPosition[0];
+        let j = cursorPosition[1];
 
-        let jOffset = j - ((j / 2) * 2);
-        let screenCellPointer = (i * 11 * 32) + (j / 2) + jOffset;
+        let isLeftHalfOfByte = (j = ((j / 2) * 2));
+        let bytePointer = (i * 11 * 32) + (j / 2);
+
+        let characterMap = Output.getMap(c);
+
+        let i = 0;
+        while (i < 11) {
+            let byteContent = screen[bytePointer];
+            if (isLeftHalfOfByte) {
+                let byteContent = (byteContent & maskZeroesOnes) | (characterMap[i] * 1024);
+            }
+            else {
+                let byteContent = (byteContent & maskOnesZeroes) | characterMap[i];
+            }
+
+            let bytePointer = bytePointer + 32;
+            let i = i + 1;
+        }
+
+        if (cursorPosition[1] > 63) {
+            let cursorPosition[1] = 0;
+            let cursorPosition[0] = cursorPosition[0] + 1;
+        }
+        else {
+            let cursorPosition[1] = cursorPosition[1] + 1;
+        }
+
+        return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
+        var int len;
+        var int i;
+
+        let i = 0;
+        let len = s.length();
+
+        while (i < len) {
+            do Output.printChar(s.charAt(i));
+            let i = i + 1;
+        }
+
+        return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
+        var String s;
+        
+        let s = String.new(6);
+        do s.setInt(i);
+        do Output.printString(s);
+
+        do s.dispose();
+        return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+        do Output.moveCursor(cursorPosition[0] + 1, 0);
+        return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        do Output.moveCursor(cursorPosition[0], cursorPosition[1]);
+        return;
     }
 }
