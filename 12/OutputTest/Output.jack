@@ -28,15 +28,15 @@ class Output {
     function void init() {
         do Output.initMap();
         
+        let screen = 16384;
+        let maskZeroesOnes = 255;
+        let maskOnesZeroes = ~maskZeroesOnes;
+
         let cursorPosition = Array.new(2);
         let cursorPosition[0] = 0;
         let cursorPosition[1] = 0;
         do Output.moveCursor(cursorPosition[0], cursorPosition[1]);
-
-        let maskZeroesOnes = 255;
-        let maskOnesZeroes = ~maskZeroesOnes;
         
-        let screen = 16384;
         return;
     }
 
