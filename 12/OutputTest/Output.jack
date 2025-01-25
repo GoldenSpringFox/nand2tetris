@@ -33,9 +33,7 @@ class Output {
         let maskOnesZeroes = ~maskZeroesOnes;
 
         let cursorPosition = Array.new(2);
-        let cursorPosition[0] = 0;
-        let cursorPosition[1] = 0;
-        do Output.moveCursor(cursorPosition[0], cursorPosition[1]);
+        do Output.moveCursor(0, 0);
         
         return;
     }
@@ -88,7 +86,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,27,51,51,63,51,51,51,51,0,0); // A ** IS FILLED **
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -196,51 +194,49 @@ class Output {
         let cursorPosition[0] = i;
         let cursorPosition[1] = j;
 
-        do Output.printChar(0);
+        do Output.writeChar(32);
         return;
     }
-
-    /** Displays the given character at the cursor location,
-     *  and advances the cursor one column forward. */
-    function void printChar(char c) {
-        // Your implementation should be as efficient as possible.
-        // For example, you can draw multiple pixels at once, for each row.
+    function void writeChar(char c) {
         var int i, j;
         var bool isLeftHalfOfByte;
         var int bytePointer;
         var Array characterMap;
-        var int byteContent;
 
         let i = cursorPosition[0];
         let j = cursorPosition[1];
 
-        let isLeftHalfOfByte = (j = ((j / 2) * 2));
+        let isLeftHalfOfByte = ~(j = ((j / 2) * 2));
         let bytePointer = (i * 11 * 32) + (j / 2);
 
         let characterMap = Output.getMap(c);
 
         let i = 0;
         while (i < 11) {
-            let byteContent = screen[bytePointer];
             if (isLeftHalfOfByte) {
-                let byteContent = (byteContent & maskZeroesOnes) | (characterMap[i] * 1024);
+                let screen[bytePointer] = (screen[bytePointer] & maskZeroesOnes) | (characterMap[i] * 256);
             }
             else {
-                let byteContent = (byteContent & maskOnesZeroes) | characterMap[i];
+                let screen[bytePointer] = (screen[bytePointer] & maskOnesZeroes) | characterMap[i];
             }
 
             let bytePointer = bytePointer + 32;
             let i = i + 1;
         }
+        return;
+    }
+    /** Displays the given character at the cursor location,
+     *  and advances the cursor one column forward. */
+    function void printChar(char c) {
+        // Your implementation should be as efficient as possible.
+        // For example, you can draw multiple pixels at once, for each row.
+        //TODO: backspace and new line implementation
 
+        do Output.writeChar(c);
+        let cursorPosition[1] = cursorPosition[1] + 1;
         if (cursorPosition[1] > 63) {
-            let cursorPosition[1] = 0;
-            let cursorPosition[0] = cursorPosition[0] + 1;
+            do Output.println();
         }
-        else {
-            let cursorPosition[1] = cursorPosition[1] + 1;
-        }
-
         return;
     }
 
@@ -276,7 +272,13 @@ class Output {
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
-        do Output.moveCursor(cursorPosition[0] + 1, 0);
+        var int row;
+        let row = cursorPosition[0] + 1;
+        if (row  > 22) {
+            let row = 0;
+        }
+        do Output.moveCursor(row, 0);
+
         return;
     }
 

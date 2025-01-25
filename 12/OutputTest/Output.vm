@@ -12,31 +12,7 @@ push constant 2
 call Array.new 1
 pop static 1
 push constant 0
-push static 1
-add
 push constant 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 1
-push static 1
-add
-push constant 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 0
-push static 1
-add
-pop pointer 1
-push that 0
-push constant 1
-push static 1
-add
-pop pointer 1
-push that 0
 call Output.moveCursor 2
 pop temp 0
 push constant 0
@@ -522,15 +498,15 @@ push constant 0
 call Output.create 12
 pop temp 0
 push constant 65
-push constant 0
-push constant 0
-push constant 0
-push constant 0
-push constant 0
-push constant 0
-push constant 0
-push constant 0
-push constant 0
+push constant 12
+push constant 27
+push constant 51
+push constant 51
+push constant 63
+push constant 51
+push constant 51
+push constant 51
+push constant 51
 push constant 0
 push constant 0
 call Output.create 12
@@ -1530,12 +1506,12 @@ pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
-push constant 0
-call Output.printChar 1
+push constant 32
+call Output.writeChar 1
 pop temp 0
 push constant 0
 return
-function Output.printChar 6
+function Output.writeChar 5
 push constant 0
 push static 1
 add
@@ -1555,6 +1531,7 @@ call Math.divide 2
 push constant 2
 call Math.multiply 2
 eq
+not
 pop local 2
 push local 0
 push constant 11
@@ -1577,17 +1554,18 @@ push constant 11
 lt
 not
 if-goto WHILE_END0
+push local 2
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 3
+push static 2
+add
 push local 3
 push static 2
 add
 pop pointer 1
 push that 0
-pop local 5
-push local 2
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push local 5
 push static 3
 and
 push local 0
@@ -1595,13 +1573,23 @@ push local 4
 add
 pop pointer 1
 push that 0
-push constant 1024
+push constant 256
 call Math.multiply 2
 or
-pop local 5
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 goto IF_END0
 label IF_FALSE0
-push local 5
+push local 3
+push static 2
+add
+push local 3
+push static 2
+add
+pop pointer 1
+push that 0
 push static 4
 and
 push local 0
@@ -1610,7 +1598,10 @@ add
 pop pointer 1
 push that 0
 or
-pop local 5
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 label IF_END0
 push local 3
 push constant 32
@@ -1622,6 +1613,26 @@ add
 pop local 0
 goto WHILE_EXP0
 label WHILE_END0
+push constant 0
+return
+function Output.printChar 0
+push argument 0
+call Output.writeChar 1
+pop temp 0
+push constant 1
+push static 1
+add
+push constant 1
+push static 1
+add
+pop pointer 1
+push that 0
+push constant 1
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 push constant 1
 push static 1
 add
@@ -1629,48 +1640,12 @@ pop pointer 1
 push that 0
 push constant 63
 gt
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
-push constant 1
-push static 1
-add
-push constant 0
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+call Output.println 0
 pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 0
-push static 1
-add
-push constant 0
-push static 1
-add
-pop pointer 1
-push that 0
-push constant 1
-add
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-goto IF_END1
-label IF_FALSE1
-push constant 1
-push static 1
-add
-push constant 1
-push static 1
-add
-pop pointer 1
-push that 0
-push constant 1
-add
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-label IF_END1
+label IF_FALSE0
 push constant 0
 return
 function Output.printString 2
@@ -1714,7 +1689,7 @@ call String.dispose 1
 pop temp 0
 push constant 0
 return
-function Output.println 0
+function Output.println 1
 push constant 0
 push static 1
 add
@@ -1722,6 +1697,17 @@ pop pointer 1
 push that 0
 push constant 1
 add
+pop local 0
+push local 0
+push constant 22
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+pop local 0
+label IF_FALSE0
+push local 0
 push constant 0
 call Output.moveCursor 2
 pop temp 0
