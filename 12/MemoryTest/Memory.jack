@@ -75,7 +75,7 @@ class Memory {
         // 2. Insert segment into the freeList
         var int block;
         let block = (o - 2);
-        let ram[o - 2] = freeList;
+        let ram[block] = freeList;
         let freeList = block;
         return;
     }    
