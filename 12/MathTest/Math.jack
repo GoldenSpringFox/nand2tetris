@@ -23,6 +23,7 @@ class Math {
         while (i < 16) {
             let twoToThe[i] = twoToThe_i;
             let twoToThe_i = twoToThe_i + twoToThe_i;
+            let i = i + 1;
         }
         
         return;
@@ -60,9 +61,7 @@ class Math {
         let shiftedX = x;
         let i = 0;
 
-        while (i < x) {
-            do Output.printInt(shiftedX);
-            do Output.println();
+        while (i < 16) {
             if (Math.bit(y, i) = 1) {
                 let sum = sum + shiftedX;
             }
@@ -104,8 +103,9 @@ class Math {
 
         let result = Math.divideRecursion(Math.abs(x), Math.abs(y));
         if (neg) {
-            return ~result;
+            return -result;
         }
+
         return result;
     }
 
@@ -147,11 +147,12 @@ class Math {
         var int largerYsquared;
 
         let y = 0;
-        let j = #x - 1;
+        let j = 7;
         while (j > -1) {
             let largerY = (y + twoToThe[j]);
             let largerYsquared = Math.definitlyNotMultiplication(largerY, largerY);
-            if ((largerYsquared < x + 1) & largerYsquared > 0) {
+
+            if (((largerYsquared - 1) < x) & (largerYsquared > 0)) {
                 let y = y + twoToThe[j];
             }
             let j = j - 1;
