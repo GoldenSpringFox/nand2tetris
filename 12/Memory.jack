@@ -53,6 +53,7 @@ class Memory {
         // the freeList should look like.
         var int blockPointer;
         var int newBlock;
+        
         let blockPointer = freeList;
         while (ram[blockPointer + 1] < (size + 2)) {
             if (ram[blockPointer] = 0) {
@@ -60,11 +61,12 @@ class Memory {
             }
             let blockPointer = ram[blockPointer];
         }
-        let newBlock = blockPointer + ram[blockPointer + 1] - size - 2;
-        let ram[newBlock -1] = size;
-        let blockPointer[1] = blockPointer[1] - size;
-        return newBlock;
 
+        let newBlock = blockPointer + ram[blockPointer + 1] - size;
+        let ram[newBlock -1] = size;
+        let blockPointer[1] = blockPointer[1] - size - 2;
+
+        return newBlock;
     }
 
     /** De-allocates the given object (cast as an array) by making

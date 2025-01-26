@@ -89,8 +89,6 @@ push that 0
 add
 push argument 0
 sub
-push constant 2
-sub
 pop local 1
 push local 1
 push constant 1
@@ -112,10 +110,17 @@ pop pointer 1
 push that 0
 push argument 0
 sub
+push constant 2
+sub
 pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
+push local 1
+call Output.printInt 1
+pop temp 0
+call Output.println 0
+pop temp 0
 push local 1
 return
 function Memory.deAlloc 1
@@ -123,9 +128,7 @@ push argument 0
 push constant 2
 sub
 pop local 0
-push argument 0
-push constant 2
-sub
+push local 0
 push static 0
 add
 push static 1
