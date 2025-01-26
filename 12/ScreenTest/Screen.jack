@@ -101,6 +101,11 @@ class Screen {
         var int x, y, a, b, diff, dx, dy, temp;
         var bool mirroredY;
 
+        if (y1 = y2) {
+            do Screen.drawHorizontalLine(x1, x2, y1);
+            return;
+        }
+
         // enforce x1 < x2
         if (x1 > x2) {
             let temp = x1;
@@ -109,7 +114,7 @@ class Screen {
 
             let temp = y1;
             let y1 = y2;
-            let y2 = y1;
+            let y2 = temp;
         }
 
         let mirroredY = (y1 > y2);
@@ -126,6 +131,25 @@ class Screen {
 
         let dx = x2 - x1;
         let dy = y2 - y1;
+
+        /*
+        do Output.printInt(x1);
+        do Output.printString(", ");
+        do Output.printInt(x2);
+        do Output.printString(" | ");
+        do Output.printInt(y1);
+        do Output.printString(", ");
+        do Output.printInt(y2);
+        do Output.printString(" | ");
+        do Output.printInt(x);
+        do Output.printString(", ");
+        do Output.printInt(y);
+        do Output.printString(" | ");
+        do Output.printInt(dx);
+        do Output.printString(", ");
+        do Output.printInt(dy);
+        do Output.println();
+        */
 
         while ((a < (dx + 1)) & (b < (dy + 1))) {
             if (mirroredY) {
@@ -145,6 +169,55 @@ class Screen {
         }
 
         return;
+    }
+
+    function void drawHorizontalLine(int start, int end, int y) {
+        var int startByteLocation;
+        var int startPixelLocationInByte;
+        var int endByteLocation;
+        var int endPixelLocationInByte;
+        var int byteValue;
+        var int mask;
+
+        if (start > end) {
+            let mask = start;
+            let start = end;
+            let end = mask;
+        }
+
+        let startByteLocation = screen + ^^^^^y + ####start;
+        let endByteLocation = screen + ^^^^^y + ####end;
+        let startPixelLocationInByte = start & 15;
+        let endPixelLocationInByte = end & 15;
+
+        if (startByteLocation = endByteLocation) {
+            let byteValue = Memory.peek(startByteLocation);
+            let mask = ((~Screen.nOnesMask(startPixelLocationInByte) | twoToThe[startPixelLocationInByte])) & Screen.nOnesMask(endPixelLocationInByte);
+            let byteValue = (byteValue & (~mask)) | (mask & color);
+            do Memory.poke(startByteLocation, byteValue);
+            return;
+        }
+
+        let byteValue = Memory.peek(startByteLocation);
+        let mask = (~Screen.nOnesMask(startPixelLocationInByte) | twoToThe[startPixelLocationInByte]);
+        let byteValue = (byteValue & (~mask)) | (mask & color);
+        do Memory.poke(startByteLocation, byteValue);
+        
+        let startByteLocation = startByteLocation + 1;
+        while (startByteLocation < endByteLocation) {
+            do Memory.poke(startByteLocation, color);
+            let startByteLocation = startByteLocation + 1;
+        }
+
+        let byteValue = Memory.peek(endByteLocation);
+        let mask = Screen.nOnesMask(endPixelLocationInByte);
+        let byteValue = (byteValue & (~mask)) | (mask & color);
+        do Memory.poke(endByteLocation, byteValue);
+        return;
+    }
+
+    function int nOnesMask(int n) {
+        return (^twoToThe[n]) - 1;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
