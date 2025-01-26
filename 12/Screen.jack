@@ -223,6 +223,12 @@ class Screen {
     /** Draws a filled rectangle whose top left corner is (x1, y1)
         * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int pivot;
+        let pivot = y1;
+        while (pivot < (y2 + 1)) {
+            do Screen.drawLine(x1, pivot, x2, pivot);
+            let pivot = pivot + 1;
+        }
         return;
     }
 
@@ -234,7 +240,15 @@ class Screen {
         // 1. for (dy = -r ... r)
         // 2.   let halfWidth = sqrt(r*r - dy*dy)
         // 3.   do drawLine(x-halfWidth, y+dy, x+halfWidth, y+dy)
+        var int dy;
+        var int halfWidth;
+        let dy = -r;
         
+        while ((dy < r) & (dy < 182)) {
+            let halfWidth = Math.sqrt((r*r) -(dy*dy));
+            do Screen.drawLine (x - halfWidth, y + dy, x + halfWidth, y + dy);
+            let dy = dy + 1;
+        }
         return;
     }
 }
